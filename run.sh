@@ -9,4 +9,10 @@ fi
 cd out
 rm -f *.class
 javac -d . ../*.java
-java PlayerSkeleton
+
+if [ "$1" == "novisual" ]
+then
+    java NoVisualPlayerSkeleton
+else
+    java PlayerSkeleton
+fi

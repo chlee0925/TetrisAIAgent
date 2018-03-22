@@ -1,10 +1,8 @@
 
 public class PlayerSkeleton {
 
-	//implement this function to have a working system
 	public int pickMove(State s, int[][] legalMoves) {
-		
-		return 0;
+		return pickMoveImpl(s.getField(), legalMoves);
 	}
 	
 	public static void main(String[] args) {
@@ -24,4 +22,8 @@ public class PlayerSkeleton {
 		System.out.println("You have completed "+s.getRowsCleared()+" rows.");
 	}
 	
+	// Implementation method for pickMove
+	public int pickMoveImpl(int[][] field, int[][] legalMoves) {
+		return 0;
+	}
 }
