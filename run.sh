@@ -10,7 +10,7 @@ cd out
 rm -f *.class
 javac -d . ../*.java
 
-if [ "$1" == "novisual" ]
+if [ "$1" == "--novisual" ]
 then
     java NoVisualPlayerSkeleton
 else
