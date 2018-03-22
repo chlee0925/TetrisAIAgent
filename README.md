@@ -1,71 +1,114 @@
-# This is a basic Tetris simulation.
+# Tetris AI player
 
-## Files:
+## Files in the project:
 	State - tetris simulation
 	TFrame - frame that draws the board
 	TLabel - drawing library
 	PlayerSkeleton - setup for implementing a player
 	
 	
-## State:
-This is the tetris simulation.  It keeps track of the state and allows you to 
-make moves.  The board state is stored in field (a double array of integers) and
-is accessed by getField().  Zeros denote an empty square.  Other values denote
-the turn on which that square was placed.  NextPiece (accessed by getNextPiece)
-contains the ID (0-6) of the piece you are about to play.
+## `State`:
+This is the tetris simulation.  It keeps track of the tetris state and allows you to 
+make moves.  
 
-Moves are defined by two numbers: the SLOT, the leftmost column of the piece and
-the ORIENT, the orientation of the piece.  Legalmoves gives an nx2 int array
-containing the n legal moves.  A move can be made by specifying the two
-parameters as either 2 ints, an int array of length 2, or a single int
-specifying the row in the legalMoves array corresponding to the appropriate move.
+`field`: The board state is stored in `field` (a 2D int array) and is accessed by `getField()`.
+* Zero-value: empty square.
+* Non-zero value: filled square. The number refers to the turn on which that square was placed.  
 
-It also keeps track of the number of lines cleared - accessed by getRowsCleared().
+`nextPiece`: (accessed by `getNextPiece()`) contains the ID (0-6) of the piece you are about to play.
+* Tetris piece information (naming according to http://tetris.wikia.com/wiki/Tetromino)
+```
+ID and Orientation index according to the program configuration
 
-draw() draws the board.
-drawNext() draws the next piece above the board
-clearNext() clears the drawing of the next piece so it can be drawn in a different
-	slot/orientation
+ID 0 (name 'O')
 
+	Orientation
+	0
 
+	XX	
+	XX
 
+ID 1 (name 'I')
+
+	Orientation
+	0		1
+
+	XXXX		X
+			X
+			X
+			X
+
+ID 2 (name 'L')
+
+	Orientation
+	0	1	2	3
+
+	X	XXX	XX	  X
+	X	X	 X	XXX
+	XX		 X
+
+ID 3 (name "J")
+
+	Orientation
+	0	1	2	3
+
+	 X	X	XX	XXX
+	 X	XXX	X	  X
+	XX		X
+
+ID 4 (name "T")
+
+	Orientation
+	0	1	2	3
+
+	X	XXX	 X	 X
+	XX	 X	XX	XXX
+	X		 X
+
+ID 5 (name "S")
+
+	Orientation
+	0	1
+
+	 XX	X
+	XX	XX
+		 X
+
+ID 6 (name "Z")
+
+	Orientation
+	0	1
+
+	XX	 X
+	 XX	XX
+		X
+```
+
+### Making moves
+* `slot`: (int) the leftmost column on which the next piece is to be placed
+* `orient`: (int) the orientation index of the next piece
+* `legalMoves()`: returns (nx2) int array containing the n legal moves.
+* `makeMove()`: Making a move using the next piece. Argument options:
+	* `orient` and `slot`
+	* an int array {`orient`, `slot`}
+	* row index of the (nx2) array returned by `legalMoves()` call
+
+`cleared` accessed by `getRowsCleared()`: the number of lines cleared
+
+`draw()`: draws the board.
+
+`drawNext()`: draws the next piece above the board
+
+`clearNext()`: clears the drawing of the next piece so it can be subsequently drawn in the updated slot/orientation using `drawNext()`
 
 ## TFrame:
 This extends JFrame and is instantiated to draw a state.
 It can save the current drawing to a .png file.
 The main function allows you to play a game manually using the arrow keys.
 
-
-
 ## TLabel:
 This is a drawing library.
-
-
 
 ## PlayerSkeleton:
 An example of how to implement a player.
 The main function plays a game automatically (with visualization).
-
-
-```
- xx
- xx
-
-
-xxxx
-
-  X
-XXX
-
-X
-XXX
-
- x
-xxx
-
- xx
-xx
-
-xx
- xx
-```
