@@ -1,13 +1,23 @@
 # Tetris AI player
 
+## How to build / run:
+```
+./run.sh		# With visualization
+
+OR
+
+./run.sh --novisual	# Without visualization
+```
+
 ## Files in the project:
 	State - tetris simulation
 	TFrame - frame that draws the board
 	TLabel - drawing library
 	PlayerSkeleton - setup for implementing a player
+	NoVisualState / NoVisualPlayerSkeleton - non-visual versions for fast execution
 	
 	
-## `State`:
+## State:
 This is the tetris simulation.  It keeps track of the tetris state and allows you to 
 make moves.  
 
@@ -110,5 +120,4 @@ The main function allows you to play a game manually using the arrow keys.
 This is a drawing library.
 
 ## PlayerSkeleton:
-An example of how to implement a player.
 The main function plays a game automatically (with visualization).
