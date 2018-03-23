@@ -12,7 +12,7 @@ public class PlayerSkeleton {
 									, -1.0, -1.0, -1.0, -1.0, -1.0
 									, -1.0, -1.0, -1.0, -1.0, -1.0
 									, -1.0, -1.0, -1.0, -1.0, -1.0
-									, -1.0};
+									, -2.0};
 
 	public int pickMove(State s, int[][] legalMoves) {
 		return pickMoveImpl(s.getField(), legalMoves, s.getTop(), s.getpOrients(), s.getpWidth(), s.getpHeight(), s.getpBottom(), s.getpTop(), s.getNextPiece());
@@ -27,7 +27,7 @@ public class PlayerSkeleton {
 			s.draw();
 			s.drawNext(0, 0);
 			try {
-				Thread.sleep(500);
+				Thread.sleep(300);
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
@@ -67,7 +67,7 @@ public class PlayerSkeleton {
 			for (int i = 0; i < pWidth[nextPiece][orient]; i++) {
 				//from bottom to top of brick
 				for (int h = height + pBottom[nextPiece][orient][i]; h < height + pTop[nextPiece][orient][i]; h++) {
-					field[h][i + slot] = Integer.MAX_VALUE; // TODO Change the magic number
+					field[h][i + slot] = Integer.MAX_VALUE;
 				}
 			}
 			// Create temporary top
@@ -105,11 +105,25 @@ public class PlayerSkeleton {
 	}
 
 	public double evaluationFunction(int[][] field, int[] top) {
-		int weightIndex = 0;
-		return (weightVectors[weightIndex++]) * rewardRowsToBeCleared(field)
-				+ (weightVectors[weightIndex++]) * (cols.stream().mapToInt(col -> featureColumnHeight(field, col)).sum())
-				+ (weightVectors[weightIndex++]) * (cols.stream().filter(col -> { return col <= 8; }).mapToInt(col -> featureAbsoluteAdjColumnHeightDiff(field, col)).sum())
-				+ (weightVectors[weightIndex++]) * featureMaxColumnHeight(field) + (-1) * featureNumOfHoles(field);
+		final int featureColumnHeightIndex = 1;
+		final int featureAbsoluteAdjColumnHeightDiffIndex = 11;
+		return 
+
+			// INDEX 0 - REWARD
+			(weightVectors[0]) * rewardRowsToBeCleared(field, top)
+
+			// FEATURE 1~10 - COLUMN HEIGHT
+			+ (cols.stream().mapToDouble(col -> (weightVectors[featureColumnHeightIndex+col]) * featureColumnHeight(field, top, col)).sum())
+
+			// FEATURE 11~19 - ABSOLUTE HEIGHT DIFF
+			+ (cols.stream().filter(col -> { return col <= 8; })
+				.mapToDouble(col -> (weightVectors[featureAbsoluteAdjColumnHeightDiffIndex+col]) * featureAbsoluteAdjColumnHeightDiff(field, top, col)).sum())
+			
+			// FEATURE 20 - MAX HEIGHT
+			+ (weightVectors[20]) * featureMaxColumnHeight(field, top)
+
+			// FEATURE 21 - NUM OF HOLES
+			+ (weightVectors[21]) * featureNumOfHoles(field, top);
 	}
 
 	///////////////////////////////////////
@@ -119,21 +133,21 @@ public class PlayerSkeleton {
 	/**
 	 * FEATURE 1~10 - Column Height
 	 */
-	public int featureColumnHeight(int[][] field, int col) {
+	public int featureColumnHeight(int[][] field, int[] top, int col) {
 		return 0; // TODO Implement
 	}
 
 	/**
 	 * FEATURE 11~19 - Absolute height difference between (col) and (col+1) columns.
 	 */
-	public int featureAbsoluteAdjColumnHeightDiff(int[][] field, int col) {
+	public int featureAbsoluteAdjColumnHeightDiff(int[][] field, int[] top, int col) {
 		return 0; // TODO Implement
 	}
 
 	/**
 	 * FEATURE 20 - Maximum height across all columns
 	 */
-	public int featureMaxColumnHeight(int[][] field) {
+	public int featureMaxColumnHeight(int[][] field, int[] top) {
 		return 0; // TODO Implement
 	}
 
@@ -141,7 +155,7 @@ public class PlayerSkeleton {
 	 * FEATURE 21 - the number of holes in the wall, that is, the number of empty positions of 
 	 * the wall that have at least one full position above them.
 	 */
-	public int featureNumOfHoles(int[][] field) {
+	public int featureNumOfHoles(int[][] field, int[] top) {
 		return 0; // TODO Implement
 	}
 
@@ -149,7 +163,7 @@ public class PlayerSkeleton {
 	///////////		REWARD	/////////////
 	/////////////////////////////////////
 
-	public int rewardRowsToBeCleared(int[][] field) {
+	public int rewardRowsToBeCleared(int[][] field, int[] top) {
 		return 0; // TODO Implement
 	}
 
