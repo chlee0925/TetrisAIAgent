@@ -15,7 +15,7 @@ public class PlayerSkeleton {
 									, -2.0};
 
 	public int pickMove(State s, int[][] legalMoves) {
-		return pickMoveImpl(s.getField(), legalMoves, s.getTop(), s.getpOrients(), s.getpWidth(), s.getpHeight(), s.getpBottom(), s.getpTop(), s.getNextPiece());
+		return pickMoveImpl(s.getField(), legalMoves, s.getTop(), s.getpOrients(), s.getpWidth(), s.getpHeight(), s.getpBottom(), s.getpTop(), s.getNextPiece(), s.getRowsCleared());
 	}
 
 	public static void main(String[] args) {
@@ -27,7 +27,7 @@ public class PlayerSkeleton {
 			s.draw();
 			s.drawNext(0, 0);
 			try {
-				Thread.sleep(300);
+				Thread.sleep(5000);
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
@@ -39,7 +39,7 @@ public class PlayerSkeleton {
 	 * Implementation method for pickMove
 	 * for every possible legal move, try making that move and run the evaluation function on that state.
 	 */
-	public int pickMoveImpl(int[][] field, int[][] legalMoves, int[] top, int[] pOrient, int[][] pWidth, int[][] pHeight, int[][][] pBottom, int[][][] pTop, int nextPiece) {
+	public int pickMoveImpl(int[][] field, int[][] legalMoves, int[] top, int[] pOrient, int[][] pWidth, int[][] pHeight, int[][][] pBottom, int[][][] pTop, int nextPiece, int rowsCleared) {
 		int moveDecision = 0;
 		double currentBest = Double.NEGATIVE_INFINITY;
 		for (int moveIndex = 0; moveIndex < legalMoves.length; moveIndex++) {
@@ -80,9 +80,9 @@ public class PlayerSkeleton {
 			/////////////////////////////////
 			///Run the evaluation function///
 			/////////////////////////////////
-			
+
 			// Calculate the evaluation value
-			double evaluationValue = evaluationFunction(field, tempTop);
+			double evaluationValue = evaluationFunction(field, tempTop, rowsCleared);
 			if (evaluationValue > currentBest) {
 				currentBest = evaluationValue;
 				moveDecision = moveIndex;
@@ -104,26 +104,27 @@ public class PlayerSkeleton {
 		return moveDecision;
 	}
 
-	public double evaluationFunction(int[][] field, int[] top) {
+	public double evaluationFunction(int[][] field, int[] top, int rowsCleared) {
 		final int featureColumnHeightIndex = 1;
 		final int featureAbsoluteAdjColumnHeightDiffIndex = 11;
-		return 
+
+		return
 
 			// INDEX 0 - REWARD
-			(weightVectors[0]) * rewardRowsToBeCleared(field, top)
+			(weightVectors[0]) * rowsCleared
 
 			// FEATURE 1~10 - COLUMN HEIGHT
-			+ (cols.stream().mapToDouble(col -> (weightVectors[featureColumnHeightIndex+col]) * featureColumnHeight(field, top, col)).sum())
+			+ (cols.stream().mapToDouble(col -> (weightVectors[featureColumnHeightIndex+col]) * featureColumnHeight(top, col)).sum())
 
 			// FEATURE 11~19 - ABSOLUTE HEIGHT DIFF
 			+ (cols.stream().filter(col -> { return col <= 8; })
-				.mapToDouble(col -> (weightVectors[featureAbsoluteAdjColumnHeightDiffIndex+col]) * featureAbsoluteAdjColumnHeightDiff(field, top, col)).sum())
-			
+				.mapToDouble(col -> (weightVectors[featureAbsoluteAdjColumnHeightDiffIndex+col]) * featureAbsoluteAdjColumnHeightDiff(top, col)).sum())
+
 			// FEATURE 20 - MAX HEIGHT
-			+ (weightVectors[20]) * featureMaxColumnHeight(field, top)
+			+ (weightVectors[20]) * featureMaxColumnHeight(top)
 
 			// FEATURE 21 - NUM OF HOLES
-			+ (weightVectors[21]) * featureNumOfHoles(field, top);
+			+ (weightVectors[21]) * featureNumOfHoles(top, field);
 	}
 
 	///////////////////////////////////////
@@ -133,38 +134,44 @@ public class PlayerSkeleton {
 	/**
 	 * FEATURE 1~10 - Column Height
 	 */
-	public int featureColumnHeight(int[][] field, int[] top, int col) {
-		return 0; // TODO Implement
+	public int featureColumnHeight(int[] top, int col) {
+		return top[col];
 	}
 
 	/**
 	 * FEATURE 11~19 - Absolute height difference between (col) and (col+1) columns.
 	 */
-	public int featureAbsoluteAdjColumnHeightDiff(int[][] field, int[] top, int col) {
-		return 0; // TODO Implement
+	public int featureAbsoluteAdjColumnHeightDiff(int[] top, int col) {
+		return Math.abs(top[col] - top[col+1]);
 	}
 
 	/**
 	 * FEATURE 20 - Maximum height across all columns
 	 */
-	public int featureMaxColumnHeight(int[][] field, int[] top) {
-		return 0; // TODO Implement
+	public int featureMaxColumnHeight(int[] top) {
+		int maxHeight = 0;
+		for (int height : top) {
+			if (maxHeight < height) {
+				maxHeight = height;
+			}
+		}
+		return maxHeight;
 	}
 
 	/**
-	 * FEATURE 21 - the number of holes in the wall, that is, the number of empty positions of 
+	 * FEATURE 21 - the number of holes in the wall, that is, the number of empty positions of
 	 * the wall that have at least one full position above them.
 	 */
-	public int featureNumOfHoles(int[][] field, int[] top) {
-		return 0; // TODO Implement
-	}
-
-	/////////////////////////////////////
-	///////////		REWARD	/////////////
-	/////////////////////////////////////
-
-	public int rewardRowsToBeCleared(int[][] field, int[] top) {
-		return 0; // TODO Implement
+	public int featureNumOfHoles(int[] top, int[][] field) {
+		int holes = 0;
+		for (int i=0; i<top.length; i++) {
+			for (int j=0; j<top[i]; j++) {
+				if (field[j][i] == 0) {
+					holes++;
+				}
+			}
+		}
+		return holes;
 	}
 
 }
