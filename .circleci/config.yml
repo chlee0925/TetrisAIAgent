@@ -6,15 +6,6 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Start Message
-          command: echo "Starting the build"
-      - run:
           name: Build Command
           command: bash run.sh --buildonly
-      - run:
-          name: End Message
-          command: echo "Build complete"
-      - run:
-          name: Timesteamp
-          command: date
 
