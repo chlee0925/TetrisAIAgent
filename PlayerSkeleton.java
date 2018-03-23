@@ -1,8 +1,9 @@
 import java.util.*;
 
+
 public class PlayerSkeleton {
 
-	ArrayList<Integer> rows = new ArrayList<>(new int[]{0,1,2,3,4,5,6,7,8,9});
+	List<Integer> cols = Arrays.asList(new Integer[]{0,1,2,3,4,5,6,7,8,9});
 
 	public int pickMove(State s, int[][] legalMoves) {
 		return pickMoveImpl(s.getField(), legalMoves);
@@ -35,8 +36,8 @@ public class PlayerSkeleton {
 	public int evaluationFunction(int[][] field) {
 		return
 			(20) * rewardRowsToBeCleared(field)
-			+ (-1) * (rows.stream().map(col -> featureColumnHeight(field, col)).sum())
-			+ (-1) * (rows.stream().filter(col -> {return col <= 8;}).map(col -> featureAbsoluteAdjColumnHeightDiff(field, col)).sum())
+			+ (-1) * (cols.stream().mapToInt(col -> featureColumnHeight(field, col)).sum())
+			+ (-1) * (cols.stream().filter(col -> {return col <= 8;}).mapToInt(col -> featureAbsoluteAdjColumnHeightDiff(field, col)).sum())
 			+ (-1) * featureMaxColumnHeight(field)
 			+ (-1) * featureNumOfHoles(field);
 	}
