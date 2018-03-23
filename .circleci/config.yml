@@ -10,7 +10,7 @@ jobs:
           command: echo "Starting the build"
       - run:
           name: Build Command
-          command: run.sh --buildonly
+          command: ./run.sh --buildonly
       - run:
           name: End Message
           command: echo "Build complete"
