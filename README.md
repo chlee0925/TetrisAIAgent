@@ -1,5 +1,7 @@
 # Tetris AI player
 
+[![CircleCI](https://circleci.com/gh/chlee0925/TetrisAIAgent.svg?style=svg)](https://circleci.com/gh/chlee0925/TetrisAIAgent)
+
 ## How to build / run:
 ```
 ./run.sh		# With visualization
