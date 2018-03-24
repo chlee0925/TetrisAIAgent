@@ -9,4 +9,14 @@ fi
 cd out
 rm -f *.class
 javac -d . ../*.java
-java PlayerSkeleton
+
+CMD="$1"
+if [ "$CMD" == "--novisual" ] # No Visualization mode
+then
+    java NoVisualPlayerSkeleton
+elif [ "$CMD" == "--buildonly" ] # Build only command
+then
+    : # Do nothing
+else
+    java PlayerSkeleton
+fi
