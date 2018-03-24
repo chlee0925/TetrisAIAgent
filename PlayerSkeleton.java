@@ -174,9 +174,9 @@ public class PlayerSkeleton {
 		return holes;
 	}
 
-	/////////////////////////////////////
-	///////////		REWARD	/////////////
-	/////////////////////////////////////
+	//////////////////////////////////
+	///////////  REWARD  /////////////
+	//////////////////////////////////
 
 	public int rewardRowsToBeCleared(int[][] field, int[] top) {
 		int rowsCleared = 0;
@@ -196,9 +196,9 @@ public class PlayerSkeleton {
 	}
 
 	public int getMinColHeight(int[] top) {
-		int minHeight = 0;
+		int minHeight = Integer.MAX_VALUE;
 		for (int height : top) {
-			if (minHeight < height) {
+			if (minHeight > height) {
 				minHeight = height;
 			}
 		}
