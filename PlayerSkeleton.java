@@ -15,7 +15,7 @@ public class PlayerSkeleton {
 									, -2.0};
 
 	public int pickMove(State s, int[][] legalMoves) {
-		return pickMoveImpl(s.getField(), legalMoves, s.getTop(), s.getpOrients(), s.getpWidth(), s.getpHeight(), s.getpBottom(), s.getpTop(), s.getNextPiece(), s.getRowsCleared());
+		return pickMoveImpl(s.getField(), legalMoves, s.getTop(), s.getpOrients(), s.getpWidth(), s.getpHeight(), s.getpBottom(), s.getpTop(), s.getNextPiece());
 	}
 
 	public static void main(String[] args) {
@@ -39,7 +39,7 @@ public class PlayerSkeleton {
 	 * Implementation method for pickMove
 	 * for every possible legal move, try making that move and run the evaluation function on that state.
 	 */
-	public int pickMoveImpl(int[][] field, int[][] legalMoves, int[] top, int[] pOrient, int[][] pWidth, int[][] pHeight, int[][][] pBottom, int[][][] pTop, int nextPiece, int rowsCleared) {
+	public int pickMoveImpl(int[][] field, int[][] legalMoves, int[] top, int[] pOrient, int[][] pWidth, int[][] pHeight, int[][][] pBottom, int[][][] pTop, int nextPiece) {
 		int moveDecision = 0;
 		double currentBest = Double.NEGATIVE_INFINITY;
 		for (int moveIndex = 0; moveIndex < legalMoves.length; moveIndex++) {
@@ -82,7 +82,7 @@ public class PlayerSkeleton {
 			/////////////////////////////////
 
 			// Calculate the evaluation value
-			double evaluationValue = evaluationFunction(field, tempTop, rowsCleared);
+			double evaluationValue = evaluationFunction(field, tempTop);
 			if (evaluationValue > currentBest) {
 				currentBest = evaluationValue;
 				moveDecision = moveIndex;
@@ -104,14 +104,14 @@ public class PlayerSkeleton {
 		return moveDecision;
 	}
 
-	public double evaluationFunction(int[][] field, int[] top, int rowsCleared) {
+	public double evaluationFunction(int[][] field, int[] top) {
 		final int featureColumnHeightIndex = 1;
 		final int featureAbsoluteAdjColumnHeightDiffIndex = 11;
 
 		return
 
 			// INDEX 0 - REWARD
-			(weightVectors[0]) * rowsCleared
+			(weightVectors[0]) * rewardRowsToBeCleared(field, top)
 
 			// FEATURE 1~10 - COLUMN HEIGHT
 			+ (cols.stream().mapToDouble(col -> (weightVectors[featureColumnHeightIndex+col]) * featureColumnHeight(top, col)).sum())
@@ -124,7 +124,7 @@ public class PlayerSkeleton {
 			+ (weightVectors[20]) * featureMaxColumnHeight(top)
 
 			// FEATURE 21 - NUM OF HOLES
-			+ (weightVectors[21]) * featureNumOfHoles(top, field);
+			+ (weightVectors[21]) * featureNumOfHoles(field, top);
 	}
 
 	///////////////////////////////////////
@@ -162,7 +162,7 @@ public class PlayerSkeleton {
 	 * FEATURE 21 - the number of holes in the wall, that is, the number of empty positions of
 	 * the wall that have at least one full position above them.
 	 */
-	public int featureNumOfHoles(int[] top, int[][] field) {
+	public int featureNumOfHoles(int[][] field, int[] top) {
 		int holes = 0;
 		for (int i=0; i<top.length; i++) {
 			for (int j=0; j<top[i]; j++) {
@@ -172,6 +172,37 @@ public class PlayerSkeleton {
 			}
 		}
 		return holes;
+	}
+
+	/////////////////////////////////////
+	///////////		REWARD	/////////////
+	/////////////////////////////////////
+
+	public int rewardRowsToBeCleared(int[][] field, int[] top) {
+		int rowsCleared = 0;
+		for (int i=0; i<getMinColHeight(top); i++) {
+			boolean isFullRow = true;
+			for (int j=0; j<field[i].length; j++) {
+				if (field[i][j] == 0) {
+					isFullRow = false;
+					break;
+				}
+			}
+			if (isFullRow) {
+				rowsCleared++;
+			}
+		}
+		return rowsCleared;
+	}
+
+	public int getMinColHeight(int[] top) {
+		int minHeight = 0;
+		for (int height : top) {
+			if (minHeight < height) {
+				minHeight = height;
+			}
+		}
+		return minHeight;
 	}
 
 }
