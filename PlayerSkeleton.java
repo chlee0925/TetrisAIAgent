@@ -10,11 +10,11 @@ public class PlayerSkeleton {
 	public PlayerSkeleton() {
 		cols = Arrays.asList(new Integer[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 });
 		weightVectors = new double[]{ 20.0 // Reward
-									, -1.0, -1.0, -1.0, -1.0, -1.0 // Features
-									, -1.0, -1.0, -1.0, -1.0, -1.0
-									, -1.0, -1.0, -1.0, -1.0, -1.0
-									, -1.0, -1.0, -1.0, -1.0, -1.0
-									, -2.0};
+									, 1.0, 1.0, 1.0, 1.0, 1.0 // Features
+									, 1.0, 1.0, 1.0, 1.0, 1.0
+									, 1.0, 1.0, 1.0, 1.0, 1.0
+									, 1.0, 1.0, 1.0, 1.0, 1.0
+									, 2.0};
 	}
 
 	public PlayerSkeleton(double[] weightValues) {
