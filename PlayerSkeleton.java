@@ -1,18 +1,26 @@
 import java.util.*;
 
 public class PlayerSkeleton {
-
-	List<Integer> cols = Arrays.asList(new Integer[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 });
 	public static final int COLS = 10;
 	public static final int ROWS = 21;
 	public static final int N_PIECES = 7;
+	List<Integer> cols;
+	public double[] weightVectors;
 
-	public double[] weightVectors = {20.0 // Reward
+	public PlayerSkeleton() {
+		cols = Arrays.asList(new Integer[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 });
+		weightVectors = new double[]{ 20.0 // Reward
 									, -1.0, -1.0, -1.0, -1.0, -1.0 // Features
 									, -1.0, -1.0, -1.0, -1.0, -1.0
 									, -1.0, -1.0, -1.0, -1.0, -1.0
 									, -1.0, -1.0, -1.0, -1.0, -1.0
 									, -2.0};
+	}
+
+	public PlayerSkeleton(double[] weightValues) {
+		cols = Arrays.asList(new Integer[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 });
+		weightVectors = weightValues;
+	}
 
 	public int pickMove(State s, int[][] legalMoves) {
 		return pickMoveImpl(s.getField(), legalMoves, s.getTop(), s.getpOrients(), s.getpWidth(), s.getpHeight(), s.getpBottom(), s.getpTop(), s.getNextPiece());
@@ -22,6 +30,16 @@ public class PlayerSkeleton {
 		State s = new State();
 		new TFrame(s);
 		PlayerSkeleton p = new PlayerSkeleton();
+		if (args.length > 0){
+			for(int argIndex = 0; argIndex < args.length; argIndex++) {
+				p.weightVectors[argIndex] = Double.parseDouble(args[argIndex]) ;
+				// System.out.println("get: " + p.weightVectors[argIndex]);
+			}
+		}
+		for(int wIndex = 0; wIndex < p.weightVectors.length; wIndex++) {
+			System.out.print(p.weightVectors[wIndex]+",");
+		}
+		System.out.println();
 		while (!s.hasLost()) {
 			s.makeMove(p.pickMove(s, s.legalMoves()));
 			s.draw();
@@ -114,17 +132,17 @@ public class PlayerSkeleton {
 			(weightVectors[0]) * rewardRowsToBeCleared(field, top)
 
 			// FEATURE 1~10 - COLUMN HEIGHT
-			+ (cols.stream().mapToDouble(col -> (weightVectors[featureColumnHeightIndex+col]) * featureColumnHeight(top, col)).sum())
+			- (cols.stream().mapToDouble(col -> (weightVectors[featureColumnHeightIndex+col]) * featureColumnHeight(top, col)).sum())
 
 			// FEATURE 11~19 - ABSOLUTE HEIGHT DIFF
-			+ (cols.stream().filter(col -> { return col <= 8; })
+			- (cols.stream().filter(col -> { return col <= 8; })
 				.mapToDouble(col -> (weightVectors[featureAbsoluteAdjColumnHeightDiffIndex+col]) * featureAbsoluteAdjColumnHeightDiff(top, col)).sum())
 
 			// FEATURE 20 - MAX HEIGHT
-			+ (weightVectors[20]) * featureMaxColumnHeight(top)
+			- (weightVectors[20]) * featureMaxColumnHeight(top)
 
 			// FEATURE 21 - NUM OF HOLES
-			+ (weightVectors[21]) * featureNumOfHoles(field, top);
+			- (weightVectors[21]) * featureNumOfHoles(field, top);
 	}
 
 	///////////////////////////////////////
