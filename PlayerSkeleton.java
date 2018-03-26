@@ -12,7 +12,9 @@ public class PlayerSkeleton {
 									, -1.0, -1.0, -1.0, -1.0, -1.0
 									, -1.0, -1.0, -1.0, -1.0, -1.0
 									, -1.0, -1.0, -1.0, -1.0, -1.0
-									, -2.0};
+									, -2.0
+									, -1.0, -1.0, -1.0 // Additional Features
+									};
 
 	public int pickMove(State s, int[][] legalMoves) {
 		return pickMoveImpl(s.getField(), legalMoves, s.getTop(), s.getpOrients(), s.getpWidth(), s.getpHeight(), s.getpBottom(), s.getpTop(), s.getNextPiece());
@@ -125,6 +127,11 @@ public class PlayerSkeleton {
 
 			// FEATURE 21 - NUM OF HOLES
 			+ (weightVectors[21]) * featureNumOfHoles(field, top);
+
+			// ADDITIONAL FEATURES
+		//	+ (weightVectors[22]) * featureHeightWeightedCells(field, top);
+		//	+ (weightVectors[23]) * featureDepthOfWells(field, top);
+		//	+ (weightVectors[24]) * featureNumOfFullCells(field, top);
 	}
 
 	///////////////////////////////////////
@@ -166,13 +173,50 @@ public class PlayerSkeleton {
 		int holes = 0;
 		for (int i=0; i<top.length; i++) {
 			for (int j=0; j<top[i]; j++) {
-				if (field[j][i] == 0) {
+				if (field[j][i] == 0 && field[j+1][i] != 0) {
 					holes++;
 				}
 			}
 		}
 		return holes;
 	}
+
+	/**
+	 * ADDITIONAL FEATURE - Height weighted cells: Full cells weighted by their height
+	 */
+	 public int featureHeightWeightedCells(int[][] field, int[] top) {
+		 int sum = 0;
+		 for (int i=0; i<top.length; i++) {
+ 			for (int j=0; j<top[i]; j++) {
+				if (field[j][i] != 0) sum += j + 1; // weight of row 0 = 1
+ 			}
+ 		}
+		return sum;
+	 }
+
+	 /**
+ 	 * ADDITIONAL FEATURE - Wells: Sum of the depth of the wells
+ 	 */
+	 public int featureDepthOfWells(int[][] field, int[] top) {
+		 // need a clearer definition of wells
+		 return 0;
+	 }
+
+	 /**
+ 	 * ADDITIONAL FEATURE - Full cells: Number of occupied cells on the board
+ 	 */
+	 public int featureNumOfFullCells(int[][] field, int[] top) {
+		 int fullCells = 0;
+		 for (int i=0; i<top.length; i++) {
+			 for (int j=0; j<top[i]; j++) {
+				 if (field[j][i] != 0) {
+					 fullCells++;
+				 }
+			 }
+ 		}
+ 		return fullCells;
+	 }
+
 
 	//////////////////////////////////
 	///////////  REWARD  /////////////
