@@ -1,0 +1,11 @@
+version: 2
+jobs:
+  build:
+    docker:
+      - image: circleci/openjdk:8-stretch-browsers
+    steps:
+      - checkout
+      - run:
+          name: Build Command
+          command: bash run.sh --buildonly
+
