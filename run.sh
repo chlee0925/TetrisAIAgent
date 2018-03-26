@@ -13,10 +13,10 @@ javac -d . ../*.java
 CMD="$1"
 if [ "$CMD" == "--novisual" ] # No Visualization mode
 then
-    java NoVisualPlayerSkeleton
+    java NoVisualPlayerSkeleton "${@:2}"
 elif [ "$CMD" == "--buildonly" ] # Build only command
 then
     : # Do nothing
 else
-    java PlayerSkeleton
+    java PlayerSkeleton "$@"
 fi

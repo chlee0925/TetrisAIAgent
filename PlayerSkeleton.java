@@ -1,25 +1,26 @@
 import java.util.*;
+import java.util.stream.*;
 
 public class PlayerSkeleton {
 	public static final int COLS = 10;
 	public static final int ROWS = 21;
 	public static final int N_PIECES = 7;
-	List<Integer> cols;
-	public double[] weightVectors;
+    public double[] weightVectors = new double[]{ 
+                                                // Reward
+                                                20.0
+        
+                                                // Features
+                                                , 1.0, 1.0, 1.0, 1.0, 1.0 
+                                                , 1.0, 1.0, 1.0, 1.0, 1.0
+                                                , 1.0, 1.0, 1.0, 1.0, 1.0
+                                                , 1.0, 1.0, 1.0, 1.0, 1.0
+                                                , 2.0};
 
 	public PlayerSkeleton() {
-		cols = Arrays.asList(new Integer[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 });
-		weightVectors = new double[]{ 20.0 // Reward
-									, 1.0, 1.0, 1.0, 1.0, 1.0 // Features
-									, 1.0, 1.0, 1.0, 1.0, 1.0
-									, 1.0, 1.0, 1.0, 1.0, 1.0
-									, 1.0, 1.0, 1.0, 1.0, 1.0
-									, 2.0};
 	}
 
-	public PlayerSkeleton(double[] weightValues) {
-		cols = Arrays.asList(new Integer[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 });
-		weightVectors = weightValues;
+	public PlayerSkeleton(ArrayList<Double> weightOverride) {
+        for(int i = 0; i < weightOverride.size(); i++) if (i < this.weightVectors.length) this.weightVectors[i]=weightOverride.get(i);
 	}
 
 	public int pickMove(State s, int[][] legalMoves) {
@@ -28,18 +29,17 @@ public class PlayerSkeleton {
 
 	public static void main(String[] args) {
 		State s = new State();
-		new TFrame(s);
-		PlayerSkeleton p = new PlayerSkeleton();
-		if (args.length > 0){
-			for(int argIndex = 0; argIndex < args.length; argIndex++) {
-				p.weightVectors[argIndex] = Double.parseDouble(args[argIndex]) ;
-				// System.out.println("get: " + p.weightVectors[argIndex]);
-			}
-		}
+        new TFrame(s);
+
+        // Override weight vectors if provided
+        PlayerSkeleton p = new PlayerSkeleton(Arrays.asList(args).stream().mapToDouble(weightStr -> Double.parseDouble(weightStr)).boxed().collect(Collectors.toCollection(ArrayList::new)));
+
+        // Print out the weight vectors used
 		for(int wIndex = 0; wIndex < p.weightVectors.length; wIndex++) {
 			System.out.print(p.weightVectors[wIndex]+",");
-		}
-		System.out.println();
+        }
+        System.out.println();
+        
 		while (!s.hasLost()) {
 			s.makeMove(p.pickMove(s, s.legalMoves()));
 			s.draw();
@@ -132,10 +132,10 @@ public class PlayerSkeleton {
 			(weightVectors[0]) * rewardRowsToBeCleared(field, top)
 
 			// FEATURE 1~10 - COLUMN HEIGHT
-			- (cols.stream().mapToDouble(col -> (weightVectors[featureColumnHeightIndex+col]) * featureColumnHeight(top, col)).sum())
+			- (IntStream.rangeClosed(0,9).mapToDouble(col -> (weightVectors[featureColumnHeightIndex+col]) * featureColumnHeight(top, col)).sum())
 
 			// FEATURE 11~19 - ABSOLUTE HEIGHT DIFF
-			- (cols.stream().filter(col -> { return col <= 8; })
+			- (IntStream.rangeClosed(0,8)
 				.mapToDouble(col -> (weightVectors[featureAbsoluteAdjColumnHeightDiffIndex+col]) * featureAbsoluteAdjColumnHeightDiff(top, col)).sum())
 
 			// FEATURE 20 - MAX HEIGHT
