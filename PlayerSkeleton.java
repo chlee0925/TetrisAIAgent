@@ -14,7 +14,7 @@ public class PlayerSkeleton {
                                                 , 1.0, 1.0, 1.0, 1.0, 1.0
                                                 , 1.0, 1.0, 1.0, 1.0, 1.0
                                                 , 1.0, 1.0, 1.0, 1.0, 1.0
-                                                , 2.0, 1.0, 1.0};
+                                                , 2.0, 1.0, 1.0, 1.0};
 
 	public PlayerSkeleton() {
 	}
@@ -148,7 +148,10 @@ public class PlayerSkeleton {
             - (weightVectors[22]) * landingHeight
             
             // FEATURE 23 - Cell Transition
-            - (weightVectors[23]) * featureCellTransitions(field, top);
+            - (weightVectors[23]) * featureCellTransitions(field, top)
+            
+            // FEATURE 24 - Height Difference Sum
+            - (weightVectors[24]) * featureHeightDiffSum(top);
 	}
 
 	///////////////////////////////////////
@@ -223,6 +226,17 @@ public class PlayerSkeleton {
         }
 
         return numOfCellTrns;
+    }
+
+    /**
+     * FEATURE 24 - Height difference sum. Sum of the height differences between adjacent columns
+     */
+    public int featureHeightDiffSum(int[] top) {
+        int heightDiffSum = 0;
+        for (int col = 0; col < top.length - 1; col++) {
+            heightDiffSum += Math.abs(top[col] - top[col + 1]);
+        }
+        return heightDiffSum;
     }
     
 	//////////////////////////////////
