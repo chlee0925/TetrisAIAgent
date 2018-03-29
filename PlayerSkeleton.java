@@ -14,7 +14,7 @@ public class PlayerSkeleton {
                                                 , 1.0, 1.0, 1.0, 1.0, 1.0
                                                 , 1.0, 1.0, 1.0, 1.0, 1.0
                                                 , 1.0, 1.0, 1.0, 1.0, 1.0
-                                                , 2.0, 1.0, 1.0, 1.0};
+                                                , 2.0, 1.0, 1.0, 1.0, 1.0};
 
 	public PlayerSkeleton() {
 	}
@@ -151,7 +151,11 @@ public class PlayerSkeleton {
             - (weightVectors[23]) * featureCellTransitions(field, top)
             
             // FEATURE 24 - Height Difference Sum
-            - (weightVectors[24]) * featureHeightDiffSum(top);
+            - (weightVectors[24]) * featureHeightDiffSum(top)
+            
+            // FEATURE 25 - Mean column height
+            - (weightVectors[25]) * featureMeanColumnHeight(top);
+
 	}
 
 	///////////////////////////////////////
@@ -237,6 +241,13 @@ public class PlayerSkeleton {
             heightDiffSum += Math.abs(top[col] - top[col + 1]);
         }
         return heightDiffSum;
+    }
+
+    /**
+     * FEATURE 25 - Mean column height
+     */
+    public double featureMeanColumnHeight(int[] top) {
+        return Arrays.stream(top).mapToDouble(height -> (double) height).average().getAsDouble();
     }
     
 	//////////////////////////////////
