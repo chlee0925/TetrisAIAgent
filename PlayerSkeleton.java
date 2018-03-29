@@ -14,7 +14,7 @@ public class PlayerSkeleton {
                                                 , 1.0, 1.0, 1.0, 1.0, 1.0
                                                 , 1.0, 1.0, 1.0, 1.0, 1.0
                                                 , 1.0, 1.0, 1.0, 1.0, 1.0
-                                                , 2.0, 1.0};
+                                                , 2.0, 1.0, 1.0};
 
 	public PlayerSkeleton() {
 	}
@@ -145,7 +145,10 @@ public class PlayerSkeleton {
             - (weightVectors[21]) * featureNumOfHoles(field, top)
             
             // FEATURE 22 - Landing height
-            - (weightVectors[22]) * landingHeight;
+            - (weightVectors[22]) * landingHeight
+            
+            // FEATURE 23 - Cell Transition
+            - (weightVectors[23]) * featureCellTransitions(field, top);
 	}
 
 	///////////////////////////////////////
@@ -170,13 +173,7 @@ public class PlayerSkeleton {
 	 * FEATURE 20 - Maximum height across all columns
 	 */
 	public int featureMaxColumnHeight(int[] top) {
-		int maxHeight = 0;
-		for (int height : top) {
-			if (maxHeight < height) {
-				maxHeight = height;
-			}
-		}
-		return maxHeight;
+		return getMaxColHeight(top);
 	}
 
 	/**
@@ -193,6 +190,39 @@ public class PlayerSkeleton {
 			}
 		}
 		return holes;
+    }
+
+    /**
+     * FEATURE 23 - The number of empty cells/borders touching the edges of full cells.
+     */
+    public int featureCellTransitions(int[][] field, int[] top) {
+        int numOfCellTrns = 0;
+
+        int[] rowTrans = {1, -1, 0, 0};
+        int[] colTrans = {0, 0, 1, -1};
+
+        int maxHeight = getMaxColHeight(top);
+        for (int col = 0; col < top.length; col++) {
+            for (int row = 0; row <= maxHeight; row++) {
+                if (!isPositionValid(row, col)) continue;
+                if (field[row][col] != 0) continue; // only interested in empty cell
+                
+                boolean isCellTransition = false;
+                for (int i = 0; i < 4; i++) { // four neighbours
+                    int neighRow = row + rowTrans[i];
+                    int neighCol = col + colTrans[i];
+
+                    if (isPositionValid(neighRow, neighCol) && field[neighRow][neighCol] != 0) {
+                       isCellTransition = true;
+                       break;
+                    }
+                }
+
+                if (isCellTransition) numOfCellTrns++;
+            }
+        }
+
+        return numOfCellTrns;
     }
     
 	//////////////////////////////////
@@ -214,7 +244,11 @@ public class PlayerSkeleton {
 			}
 		}
 		return rowsCleared;
-	}
+    }
+    
+    ///////////////////////////////////////////////
+    ///////////  AUXILIARY FUNCTIONS  /////////////
+    ///////////////////////////////////////////////
 
 	public int getMinColHeight(int[] top) {
 		int minHeight = Integer.MAX_VALUE;
@@ -224,6 +258,24 @@ public class PlayerSkeleton {
 			}
 		}
 		return minHeight;
-	}
+    }
+
+    public int getMaxColHeight(int[] top) {
+        int maxHeight = 0;
+        for (int height : top) {
+            if (maxHeight < height) {
+                maxHeight = height;
+            }
+        }
+        return maxHeight;
+    }
+    
+    /**
+     * @param row row index
+     * @param col col index
+     */
+    public boolean isPositionValid(int row, int col) {
+        return (row >= 0) && (row < ROWS - 1) && (col >= 0) && (col < COLS);
+    }
 
 }
