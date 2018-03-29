@@ -14,7 +14,7 @@ public class PlayerSkeleton {
                                                 , 1.0, 1.0, 1.0, 1.0, 1.0
                                                 , 1.0, 1.0, 1.0, 1.0, 1.0
                                                 , 1.0, 1.0, 1.0, 1.0, 1.0
-                                                , 2.0};
+                                                , 2.0, 1.0};
 
 	public PlayerSkeleton() {
 	}
@@ -100,7 +100,7 @@ public class PlayerSkeleton {
 			/////////////////////////////////
 
 			// Calculate the evaluation value
-			double evaluationValue = evaluationFunction(field, tempTop);
+			double evaluationValue = evaluationFunction(field, tempTop, height);
 			if (evaluationValue > currentBest) {
 				currentBest = evaluationValue;
 				moveDecision = moveIndex;
@@ -122,7 +122,7 @@ public class PlayerSkeleton {
 		return moveDecision;
 	}
 
-	public double evaluationFunction(int[][] field, int[] top) {
+	public double evaluationFunction(int[][] field, int[] top, int landingHeight) {
 		final int featureColumnHeightIndex = 1;
 		final int featureAbsoluteAdjColumnHeightDiffIndex = 11;
 
@@ -142,7 +142,10 @@ public class PlayerSkeleton {
 			- (weightVectors[20]) * featureMaxColumnHeight(top)
 
 			// FEATURE 21 - NUM OF HOLES
-			- (weightVectors[21]) * featureNumOfHoles(field, top);
+            - (weightVectors[21]) * featureNumOfHoles(field, top)
+            
+            // FEATURE 22 - Landing height
+            - (weightVectors[22]) * landingHeight;
 	}
 
 	///////////////////////////////////////
@@ -190,8 +193,8 @@ public class PlayerSkeleton {
 			}
 		}
 		return holes;
-	}
-
+    }
+    
 	//////////////////////////////////
 	///////////  REWARD  /////////////
 	//////////////////////////////////
