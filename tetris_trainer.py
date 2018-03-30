@@ -15,7 +15,7 @@ creator.create("Individual", list, fitness=creator.FitnessMax, min=0, max=0, std
 
 # Constants
 NUMBER_OF_WEIGHTS = 22
-MUTATION_GENE_RATE = 0.05
+MUTATION_GENE_RATE = 0.1
 MUTATION_GENE_INDIVIDUAL_RATE = 0.2
 CROSSOVER_RATE = 0.5
 GENERATION_COUNT = 100
@@ -41,10 +41,19 @@ class GeneticAlgorithmRunner:
         self._toolbox.register("mate", tools.cxOnePoint)
         # register a mutation operator with a probability to flip each attribute/gene with probability
         self._toolbox.register("mutate", tools.mutUniformInt, indpb=MUTATION_GENE_RATE, low=0, up=1)
-        self._toolbox.register("select", tools.selTournament, tournsize=5)
+        self._toolbox.register("select", tools.selTournament, tournsize=10)
 
     def init_population(self):
         return self._toolbox.population(n=POPULATION_SIZE)
+    
+    # One of possible select functions
+    def select(self, pop):
+        top_k = tools.selBest(pop, int(POPULATION_SIZE * 0.1))
+        results = list(map(self._toolbox.clone, top_k))
+        while len(results) < len(pop):
+            results.append(self._toolbox.clone(random.choice(top_k)))
+        random.shuffle(results)
+        return results
     
     # Given a population, calculate fitness for every single individual
     def evaluate_population(self, pop):
@@ -82,31 +91,22 @@ class GeneticAlgorithmRunner:
             # cross two individuals with probability CXPB
             if random.random() < CROSSOVER_RATE:
                 self._toolbox.mate(child1, child2)
-
                 # fitness values of the children
                 # must be recalculated later
                 del child1.fitness.values
                 del child2.fitness.values
+        return pop
 
     def run(self, pop):
         for i in range(GENERATION_COUNT):
             print("-- Generation "+ str(i+1) + "--")
-            # Select the next generation individuals
             offspring = self._toolbox.select(pop, len(pop))
             offspring = list(map(self._toolbox.clone, offspring))
-            self.crossover(offspring)
+            offspring = self.crossover(offspring)
             offspring = self.mutate(offspring)
-            # Evaluate the crossovers and mutated individuals
-            invalid_ind = self.evaluate_population([ind for ind in offspring if not ind.fitness.valid])
-            print("  Evaluated %i individuals" % len(invalid_ind))
-            # The population is entirely replaced by the offspring
+            offspring = self.evaluate_population(offspring)
             pop[:] = offspring
             self.report_current_generation(pop)
-            # Remove all calculated, since the game has high standard deviation
-            # This is to prevent some individuals prevails on one-shot high score
-            if i != GENERATION_COUNT - 1:
-                for ind in pop:
-                    del pop.fitness.values
         return pop
 
     # Change this function to alter the generation reporting
@@ -115,14 +115,14 @@ class GeneticAlgorithmRunner:
         fits = [ind.fitness.values[0] for ind in pop]
         length = len(pop)
         mean = sum(fits) / length
-        sum2 = sum(x*x for x in fits)
-        std = abs(sum2 / length - mean**2)**0.5
+        # sum2 = sum(x*x for x in fits)
+        # std = abs(sum2 / length - mean**2)**0.5
         
-        print("  Min %s" % min(fits))
-        print("  Max %s" % max(fits))
-        print("  Avg %s" % mean)
-        print("  Std %s" % std)
+        print("  Population Min %s" % tools.selWorst(pop, 1)[0].fitness.values[0])
         best_ind = tools.selBest(pop, 1)[0]
+        print("  Max %s" % best_ind.fitness.values)
+        print("  Population Avg %s" % mean)
+        print("  Max individual Std %s" % best_ind.std_dev)
         print("  Best individual is %s" %(best_ind))
 
     # Saves the generation into disk using pickle
@@ -130,7 +130,7 @@ class GeneticAlgorithmRunner:
         dump(pop, open(file_name, "wb"))
 
     def thread_fitness_function(self, individual, results, i):
-        results[i] = int(subprocess.check_output(['java', '-classpath', "out/", "NoVisualPlayerSkeleton"]).strip())
+        results[i] = int(subprocess.check_output(['java', '-classpath', "out/", "NoVisualPlayerSkeleton"] + [str(x) for x in individual]).strip())
     
     # Given an individual, calculate its fitness value
     def fitness_function(self, individual):
