@@ -8,12 +8,12 @@ public class PlayerSkeleton {
 	public static final int N_PIECES = 7;
 
 	public double[] weightVectors = {20.0 // Reward
-									, -1.0, -1.0, -1.0, -1.0, -1.0 // Features
-									, -1.0, -1.0, -1.0, -1.0, -1.0
-									, -1.0, -1.0, -1.0, -1.0, -1.0
-									, -1.0, -1.0, -1.0, -1.0, -1.0
-									, -2.0
-									, -1.0, -1.0, -1.0 // Additional Features
+									, 1.0, 1.0, 1.0, 1.0, 1.0 // Features
+									, 1.0, 1.0, 1.0, 1.0, 1.0
+									, 1.0, 1.0, 1.0, 1.0, 1.0
+									, 1.0, 1.0, 1.0, 1.0, 1.0
+									, 2.0
+									, 1.0, 1.0, 1.0 // Additional Features
 									};
 
 	public int pickMove(State s, int[][] legalMoves) {
@@ -116,22 +116,22 @@ public class PlayerSkeleton {
 			(weightVectors[0]) * rewardRowsToBeCleared(field, top)
 
 			// FEATURE 1~10 - COLUMN HEIGHT
-			+ (cols.stream().mapToDouble(col -> (weightVectors[featureColumnHeightIndex+col]) * featureColumnHeight(top, col)).sum())
+			- (cols.stream().mapToDouble(col -> (weightVectors[featureColumnHeightIndex+col]) * featureColumnHeight(top, col)).sum())
 
 			// FEATURE 11~19 - ABSOLUTE HEIGHT DIFF
-			+ (cols.stream().filter(col -> { return col <= 8; })
+			- (cols.stream().filter(col -> { return col <= 8; })
 				.mapToDouble(col -> (weightVectors[featureAbsoluteAdjColumnHeightDiffIndex+col]) * featureAbsoluteAdjColumnHeightDiff(top, col)).sum())
 
 			// FEATURE 20 - MAX HEIGHT
-			+ (weightVectors[20]) * featureMaxColumnHeight(top)
+			- (weightVectors[20]) * featureMaxColumnHeight(top)
 
 			// FEATURE 21 - NUM OF HOLES
-			+ (weightVectors[21]) * featureNumOfHoles(field, top);
+			- (weightVectors[21]) * featureNumOfHoles(field, top);
 
 			// ADDITIONAL FEATURES
-		//	+ (weightVectors[22]) * featureHeightWeightedCells(field, top);
-		//	+ (weightVectors[23]) * featureDepthOfWells(field, top);
-		//	+ (weightVectors[24]) * featureNumOfFullCells(field, top);
+		//	- (weightVectors[22]) * featureHeightWeightedCells(field, top);
+		//	- (weightVectors[23]) * featureDepthOfWells(field, top);
+		//	- (weightVectors[24]) * featureNumOfFullCells(field, top);
 	}
 
 	///////////////////////////////////////
