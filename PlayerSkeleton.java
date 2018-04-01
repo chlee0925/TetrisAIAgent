@@ -192,6 +192,27 @@ public class PlayerSkeleton {
 		return holes;
 	}
 
+	/**
+	 * FEATURE 5 - Depth of Wells (number of blocks in wells)
+	 */
+	public int featureDepthOfWells(int[] top) {
+		int wells = 0;
+		int depth = 0;
+		for (int i=0; i<top.length; i++) {
+			if (i==0) {
+				depth = top[i+1] - top[i];
+			} else if (i == top.length-1) {
+				depth = top[i-1] - top[i];
+			} else {
+				depth = Math.min(top[i+1], top[i-1]) - top[i];
+			}
+			if(depth > 0){
+				wells += depth;
+			}
+		}
+		return wells;
+	}
+
 	//////////////////////////////////
 	///////////  REWARD  /////////////
 	//////////////////////////////////
