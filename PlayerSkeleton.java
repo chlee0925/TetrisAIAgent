@@ -14,7 +14,7 @@ public class PlayerSkeleton {
 												, 0.184483 // Bumpiness
 												, 0.100000 // Maximum height
 												, 0.356630 // Num holes
-												// , 1.0   // Additional Features
+												, 0.100000 // Depth wells
 												};
 
 	public PlayerSkeleton() {
@@ -138,10 +138,9 @@ public class PlayerSkeleton {
 			// FEATURE 3 - MAX HEIGHT
 			- (weightVectors[3]) * featureMaxColumnHeight(top)
 			// FEATURE 4 - NUM OF HOLES
-			- (weightVectors[4]) * featureNumOfHoles(field, top);
-
-			// ADDITIONAL FEATURES
-		//	- (weightVectors[5]) * featureHeightWeightedCells(field, top);
+			- (weightVectors[4]) * featureNumOfHoles(field, top)
+			// FEATURE 5 - DEPTH OF WELLS
+			- (weightVectors[5]) * featureDepthOfWells(top);
 	}
 
 	///////////////////////////////////////
