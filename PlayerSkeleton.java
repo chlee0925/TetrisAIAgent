@@ -40,9 +40,9 @@ public class PlayerSkeleton {
 			System.out.print(p.weightVectors[wIndex]+",");
 		}
 		System.out.println();
-		boolean training = true;
+		boolean training = false;
 		while (!s.hasLost()) {
-			if(training && s.getTurnNumber() > 500) {
+			if(training && s.getTurnNumber() > 5000) {
 				break;
 			}
 			s.makeMove(p.pickMove(s, s.legalMoves()));
@@ -144,7 +144,7 @@ public class PlayerSkeleton {
 	}
 
 	///////////////////////////////////////
-	///////////		FEATURES	///////////
+	///////////     FEATURES    ///////////
 	///////////////////////////////////////
 
 	/**

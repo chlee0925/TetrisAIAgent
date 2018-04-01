@@ -15,7 +15,7 @@ creator.create("Individual", list, fitness=creator.FitnessMax, min=0, max=0, std
 
 # Constants
 MULTI_THREADING = True
-NUMBER_OF_WEIGHTS = 5
+NUMBER_OF_WEIGHTS = 6
 MUTATION_GENE_RATE = 0.1
 MUTATION_GENE_INDIVIDUAL_RATE = 0.2
 CROSSOVER_RATE = 0.5
