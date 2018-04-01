@@ -5,22 +5,23 @@ public class PlayerSkeleton {
 	public static final int COLS = 10;
 	public static final int ROWS = 21;
 	public static final int N_PIECES = 7;
-    public double[] weightVectors = new double[]{ 
-                                                // Reward
-                                                20.0
-        
-                                                // Features
-                                                , 1.0, 1.0, 1.0, 1.0, 1.0 
-                                                , 1.0, 1.0, 1.0, 1.0, 1.0
-                                                , 1.0, 1.0, 1.0, 1.0, 1.0
-                                                , 1.0, 1.0, 1.0, 1.0, 1.0
-                                                , 2.0};
+	public double[] weightVectors = new double[]{ 
+												// Reward
+												0.760666 // Complete lines
+
+												// Features
+												, 0.510066 // Aggregate Height
+												, 0.184483 // Bumpiness
+												, 0.100000 // Maximum height
+												, 0.356630 // Num holes
+												// , 1.0   // Additional Features
+												};
 
 	public PlayerSkeleton() {
 	}
 
 	public PlayerSkeleton(ArrayList<Double> weightOverride) {
-        for(int i = 0; i < weightOverride.size(); i++) if (i < this.weightVectors.length) this.weightVectors[i]=weightOverride.get(i);
+		for(int i = 0; i < weightOverride.size(); i++) if (i < this.weightVectors.length) this.weightVectors[i]=weightOverride.get(i);
 	}
 
 	public int pickMove(State s, int[][] legalMoves) {
@@ -29,17 +30,17 @@ public class PlayerSkeleton {
 
 	public static void main(String[] args) {
 		State s = new State();
-        new TFrame(s);
+		new TFrame(s);
 
-        // Override weight vectors if provided
-        PlayerSkeleton p = new PlayerSkeleton(Arrays.asList(args).stream().mapToDouble(weightStr -> Double.parseDouble(weightStr)).boxed().collect(Collectors.toCollection(ArrayList::new)));
+		// Override weight vectors if provided
+		PlayerSkeleton p = new PlayerSkeleton(Arrays.asList(args).stream().mapToDouble(weightStr -> Double.parseDouble(weightStr)).boxed().collect(Collectors.toCollection(ArrayList::new)));
 
-        // Print out the weight vectors used
+		// Print out the weight vectors used
 		for(int wIndex = 0; wIndex < p.weightVectors.length; wIndex++) {
 			System.out.print(p.weightVectors[wIndex]+",");
-        }
-        System.out.println();
-        
+		}
+		System.out.println();
+
 		while (!s.hasLost()) {
 			s.makeMove(p.pickMove(s, s.legalMoves()));
 			s.draw();
