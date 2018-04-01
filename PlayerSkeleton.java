@@ -124,26 +124,21 @@ public class PlayerSkeleton {
 	}
 
 	public double evaluationFunction(int[][] field, int[] top) {
-		final int featureColumnHeightIndex = 1;
-		final int featureAbsoluteAdjColumnHeightDiffIndex = 11;
 
 		return
-
-			// INDEX 0 - REWARD
+			// FEATURE 0 - ROWS CLEARED
 			(weightVectors[0]) * rewardRowsToBeCleared(field, top)
+			// FEATURE 1 - COLUMN HEIGHT
+			- (weightVectors[1]) * featureAggregateHeight(top)
+			// FEATURE 2 - BUMPINESS
+			- (weightVectors[2]) * featureBumpiness(top)
+			// FEATURE 3 - MAX HEIGHT
+			- (weightVectors[3]) * featureMaxColumnHeight(top)
+			// FEATURE 4 - NUM OF HOLES
+			- (weightVectors[4]) * featureNumOfHoles(field, top);
 
-			// FEATURE 1~10 - COLUMN HEIGHT
-			- (IntStream.rangeClosed(0,9).mapToDouble(col -> (weightVectors[featureColumnHeightIndex+col]) * featureColumnHeight(top, col)).sum())
-
-			// FEATURE 11~19 - ABSOLUTE HEIGHT DIFF
-			- (IntStream.rangeClosed(0,8)
-				.mapToDouble(col -> (weightVectors[featureAbsoluteAdjColumnHeightDiffIndex+col]) * featureAbsoluteAdjColumnHeightDiff(top, col)).sum())
-
-			// FEATURE 20 - MAX HEIGHT
-			- (weightVectors[20]) * featureMaxColumnHeight(top)
-
-			// FEATURE 21 - NUM OF HOLES
-			- (weightVectors[21]) * featureNumOfHoles(field, top);
+			// ADDITIONAL FEATURES
+		//	- (weightVectors[5]) * featureHeightWeightedCells(field, top);
 	}
 
 	///////////////////////////////////////
@@ -151,21 +146,43 @@ public class PlayerSkeleton {
 	///////////////////////////////////////
 
 	/**
-	 * FEATURE 1~10 - Column Height
+	 * helper FEATURE 1 - column height
 	 */
 	public int featureColumnHeight(int[] top, int col) {
 		return top[col];
 	}
 
 	/**
-	 * FEATURE 11~19 - Absolute height difference between (col) and (col+1) columns.
+	 * FEATURE 1 - Aggregate Height
+	 */
+	public int featureAggregateHeight(int[] top) {
+		int aggregateHeight = 0;
+		for (int i=0; i<top.length; i++) {
+			aggregateHeight += featureColumnHeight(top, i);
+		}
+		return aggregateHeight;
+	}
+
+	/**
+	 * helper FEATURE 2 - Absolute height difference between (col) and (col+1) columns.
 	 */
 	public int featureAbsoluteAdjColumnHeightDiff(int[] top, int col) {
 		return Math.abs(top[col] - top[col+1]);
 	}
 
 	/**
-	 * FEATURE 20 - Maximum height across all columns
+	 * FEATURE 2 - Bumpiness
+	 */
+	public int featureBumpiness(int[] top) {
+		int bumpiness = 0;
+		for (int i=0; i<top.length-1; i++) {
+			bumpiness += featureAbsoluteAdjColumnHeightDiff(top, i);
+		}
+		return bumpiness;
+	}
+
+	/**
+	 * FEATURE 3 - Maximum height across all columns
 	 */
 	public int featureMaxColumnHeight(int[] top) {
 		int maxHeight = 0;
@@ -178,7 +195,7 @@ public class PlayerSkeleton {
 	}
 
 	/**
-	 * FEATURE 21 - the number of holes in the wall, that is, the number of empty positions of
+	 * FEATURE 4 - the number of holes in the wall, that is, the number of empty positions of
 	 * the wall that have at least one full position above them.
 	 */
 	public int featureNumOfHoles(int[][] field, int[] top) {
