@@ -15,7 +15,7 @@ creator.create("Individual", list, fitness=creator.FitnessMax, min=0, max=0, std
 
 # Constants
 MULTI_THREADING = True
-NUMBER_OF_WEIGHTS = 22
+NUMBER_OF_WEIGHTS = 5
 MUTATION_GENE_RATE = 0.1
 MUTATION_GENE_INDIVIDUAL_RATE = 0.2
 CROSSOVER_RATE = 0.5
@@ -130,6 +130,10 @@ class GeneticAlgorithmRunner:
         print("  Max individual Std %s" % best_ind.std_dev)
         print("  Best individual is %s" %(best_ind))
 
+    # load the generation from disk using pickle
+    def load_gen_from_disk(self, file_name):
+        return load(open(file_name, "rb"))
+
     # Saves the generation into disk using pickle
     def saves_gen_into_disk(self, pop, file_name):
         dump(pop, open(file_name, "wb"))
@@ -164,7 +168,8 @@ def main():
     set_random_seed()
     genetic_algo = GeneticAlgorithmRunner()
     pop = genetic_algo.init_population()
-    
+    # pop = genetic_algo.load_gen_from_disk(LAST_GENERATION_FILE_NAME)
+
     print("Start of evolution")
     
     # Evaluate the entire population
