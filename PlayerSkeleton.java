@@ -40,8 +40,11 @@ public class PlayerSkeleton {
 			System.out.print(p.weightVectors[wIndex]+",");
 		}
 		System.out.println();
-
+		boolean training = true;
 		while (!s.hasLost()) {
+			if(training && s.getTurnNumber() > 500) {
+				break;
+			}
 			s.makeMove(p.pickMove(s, s.legalMoves()));
 			s.draw();
 			s.drawNext(0, 0);
