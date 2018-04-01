@@ -14,6 +14,7 @@ creator.create("FitnessMax", base.Fitness, weights=(1.0,))
 creator.create("Individual", list, fitness=creator.FitnessMax, min=0, max=0, std_dev=0)
 
 # Constants
+MULTI_THREADING = True
 NUMBER_OF_WEIGHTS = 22
 MUTATION_GENE_RATE = 0.1
 MUTATION_GENE_INDIVIDUAL_RATE = 0.2
@@ -67,13 +68,17 @@ class GeneticAlgorithmRunner:
 
     def map_evaluate(self, pop):
         results = [None] * len(pop)
-        threads = [None] * len(pop)
-        for i in range(len(threads)):
-            threads[i] = Thread(target=self.map_fitness_function, args=(pop[i], results, i))
-            threads[i].start()
+        if MULTI_THREADING:
+            threads = [None] * len(pop)
+            for i in range(len(threads)):
+                threads[i] = Thread(target=self.map_fitness_function, args=(pop[i], results, i))
+                threads[i].start()
 
-        for i in range(len(threads)):
-            threads[i].join()
+            for i in range(len(threads)):
+                threads[i].join()
+        else:
+            for i in range(len(pop)):
+                self.map_fitness_function(pop[i], results, i)
         return results
 
     def map_fitness_function(self, individual, results, i):
@@ -135,14 +140,18 @@ class GeneticAlgorithmRunner:
     # Given an individual, calculate its fitness value
     def fitness_function(self, individual):
         result = []
-        threads = [None] * FITNESS_FUNCTION_AVERAGE_COUNT
         results = [None] * FITNESS_FUNCTION_AVERAGE_COUNT
-        for i in range(len(threads)):
-            threads[i] = Thread(target=self.thread_fitness_function, args=(individual, results, i))
-            threads[i].start()
+        if MULTI_THREADING:
+            threads = [None] * FITNESS_FUNCTION_AVERAGE_COUNT
+            for i in range(len(threads)):
+                threads[i] = Thread(target=self.thread_fitness_function, args=(individual, results, i))
+                threads[i].start()
 
-        for i in range(len(threads)):
-            threads[i].join()
+            for i in range(len(threads)):
+                threads[i].join()
+        else:
+            for i in range(FITNESS_FUNCTION_AVERAGE_COUNT):
+                self.thread_fitness_function(individual, results, i)
         mean = reduce(lambda x, y: x + y, results) / len(results)
         sum2 = sum(x*x for x in results)
         std = abs(sum2 / len(results) - mean**2)**0.5
