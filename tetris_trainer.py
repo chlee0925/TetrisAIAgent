@@ -165,19 +165,23 @@ def set_random_seed():
     random.seed(64)
 
 def main():
-    set_random_seed()
-    genetic_algo = GeneticAlgorithmRunner()
-    pop = genetic_algo.init_population()
-    # pop = genetic_algo.load_gen_from_disk(LAST_GENERATION_FILE_NAME)
+    try:
+        set_random_seed()
+        genetic_algo = GeneticAlgorithmRunner()
+        pop = genetic_algo.init_population()
+        # pop = genetic_algo.load_gen_from_disk(LAST_GENERATION_FILE_NAME)
 
-    print("Start of evolution")
-    
-    # Evaluate the entire population
-    pop = genetic_algo.evaluate_population(pop)
+        print("Start of evolution")
 
-    # Run the genetic algorithm and returns the last generation
-    pop = genetic_algo.run(pop)
-    genetic_algo.saves_gen_into_disk(pop, LAST_GENERATION_FILE_NAME)
+        # Evaluate the entire population
+        pop = genetic_algo.evaluate_population(pop)
+
+        # Run the genetic algorithm and returns the last generation
+        pop = genetic_algo.run(pop)
+        genetic_algo.saves_gen_into_disk(pop, LAST_GENERATION_FILE_NAME)
+    except:
+        print("Error found", sys.exc_info()[0])
+        genetic_algo.saves_gen_into_disk(pop, LAST_GENERATION_FILE_NAME)
 
 if __name__ == "__main__":
     try:
