@@ -121,9 +121,10 @@ class GeneticAlgorithmRunner:
     def run(self, pop):
         for i in range(GENERATION_COUNT):
             print("-- Generation "+ str(i+1) + "--")
-            offspring = self._toolbox.select(pop, len(pop))
+            # offspring = self._toolbox.select(pop, len(pop))
+            offspring = self.selectTop(pop, tournsize=10)
             offspring = list(map(self._toolbox.clone, offspring))
-            offspring = self.crossover(offspring)
+            # offspring = self.crossover(offspring)
             offspring = self.mutate(offspring)
             offspring = self.evaluate_population(offspring)
             pop[:] = offspring
