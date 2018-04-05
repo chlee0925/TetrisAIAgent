@@ -1,6 +1,7 @@
 import random
 import sys
 import subprocess
+import numpy as np
 from threading import Thread
 from pickle import load
 from pickle import dump
@@ -56,6 +57,21 @@ class GeneticAlgorithmRunner:
         random.shuffle(results)
         return results
     
+    def average_crossover(self, ind1, ind2):
+        new_weight = 0.5 * (np.array(ind1) + np.array(ind2))
+        return creator.Individual(new_weight)
+
+    def selectTop(self, pop, tournsize=10):
+        top_size = int(POPULATION_SIZE * 0.7)
+        top_pop = tools.selBest(pop, top_size)
+        new_size = POPULATION_SIZE - len(top_pop)
+        for i in xrange(new_size):
+            aspirants = tools.selRandom(pop, tournsize)
+            top_k = tools.selBest(aspirants, 2)
+            offspring = self.average_crossover(top_k[0], top_k[1])
+            top_pop.append(offspring)
+        return top_pop
+
     # Given a population, calculate fitness for every single individual
     def evaluate_population(self, pop):
         fitness_stats = list(self.map_evaluate(pop))
