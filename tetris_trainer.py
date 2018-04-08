@@ -57,8 +57,11 @@ class GeneticAlgorithmRunner:
         random.shuffle(results)
         return results
     
-    def average_crossover(self, ind1, ind2):
-        new_weight = 0.5 * (np.array(ind1) + np.array(ind2))
+    def weighted_average_crossover(self, ind1, ind2):
+        total_ratio = ind1.fitness.values[0] + ind2.fitness.values[0]
+        ind1_ratio = ind1.fitness.values[0] / total_ratio
+        ind2_ratio = ind2.fitness.values[0] / total_ratio
+        new_weight = ind1_ratio * np.array(ind1) + ind2_ratio * np.array(ind2)
         return creator.Individual(new_weight)
 
     def selectTop(self, pop, tournsize=10):
@@ -68,7 +71,7 @@ class GeneticAlgorithmRunner:
         for i in xrange(new_size):
             aspirants = tools.selRandom(pop, tournsize)
             top_k = tools.selBest(aspirants, 2)
-            offspring = self.average_crossover(top_k[0], top_k[1])
+            offspring = self.weighted_average_crossover(top_k[0], top_k[1])
             top_pop.append(offspring)
         return top_pop
 
