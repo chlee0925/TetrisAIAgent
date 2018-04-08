@@ -25,10 +25,11 @@ POPULATION_SIZE = 50
 FITNESS_FUNCTION_AVERAGE_COUNT = 3
 LAST_GENERATION_FILE_NAME = "last_gen.pickle"
 NUMBER_OF_EVALUATING_POP_PER_BATCH = 10
-
+GENERATION_DIR = "generations/"
 class GeneticAlgorithmRunner:
-    def __init__(self):
+    def __init__(self, timestamp):
         self._init_toolbox()
+        self._timestamp = timestamp
 
     # Change the genetic algorithm here for optimisation    
     def _init_toolbox(self):
@@ -95,7 +96,6 @@ class GeneticAlgorithmRunner:
                 threads = [None] * min(total_length_of_unprocessed_pop, NUMBER_OF_EVALUATING_POP_PER_BATCH)
                 for i in range(len(threads)):
                     count = iter_count * NUMBER_OF_EVALUATING_POP_PER_BATCH + i
-                    print(count)
                     threads[i] = Thread(target=self.map_fitness_function, args=(pop[count], results, count))
                     threads[i].start()
                 for i in range(len(threads)):
@@ -139,6 +139,7 @@ class GeneticAlgorithmRunner:
             offspring = self.evaluate_population(offspring)
             pop[:] = offspring
             self.report_current_generation(pop)
+            self.saves_gen_into_disk(pop, GENERATION_DIR, i)
         return pop
 
     # Change this function to alter the generation reporting
@@ -162,8 +163,8 @@ class GeneticAlgorithmRunner:
         return load(open(file_name, "rb"))
 
     # Saves the generation into disk using pickle
-    def saves_gen_into_disk(self, pop, file_name):
-        dump(pop, open(file_name, "wb"))
+    def saves_gen_into_disk(self, pop, dir, i):
+        dump(pop, open(dir + self._timestamp + "/" + str(i+1) + ".pickle", "wb"))
 
     def thread_fitness_function(self, individual, results, i):
         results[i] = int(subprocess.check_output(['java', '-classpath', "out/", "NoVisualPlayerSkeleton"] + [str(x) for x in individual]).strip())
@@ -191,12 +192,8 @@ class GeneticAlgorithmRunner:
         std = abs(sum2 / len(results) - mean**2)**0.5
         return ((mean,),min(results), max(results), std)
 
-def set_random_seed():
-    random.seed(64)
-
-def main():
-    set_random_seed()
-    genetic_algo = GeneticAlgorithmRunner()
+def main(timestamp):
+    genetic_algo = GeneticAlgorithmRunner(timestamp)
     pop = genetic_algo.init_population()
     # pop = genetic_algo.load_gen_from_disk(LAST_GENERATION_FILE_NAME)
 
@@ -207,11 +204,14 @@ def main():
 
     # Run the genetic algorithm and returns the last generation
     pop = genetic_algo.run(pop)
-    genetic_algo.saves_gen_into_disk(pop, LAST_GENERATION_FILE_NAME)
 
 if __name__ == "__main__":
+    if len(sys.argv) < 2:
+        print("Please input the timestamp")
+        sys.exit()
+    timestamp = sys.argv[1]
     try:
-        main()
+        main(timestamp)
     except:
         print("Error found", sys.exc_info()[0])
         sys.exit()
