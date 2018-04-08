@@ -24,6 +24,7 @@ GENERATION_COUNT = 100
 POPULATION_SIZE = 50
 FITNESS_FUNCTION_AVERAGE_COUNT = 3
 LAST_GENERATION_FILE_NAME = "last_gen.pickle"
+NUMBER_OF_EVALUATING_POP_PER_BATCH = 10
 
 class GeneticAlgorithmRunner:
     def __init__(self):
@@ -88,13 +89,19 @@ class GeneticAlgorithmRunner:
     def map_evaluate(self, pop):
         results = [None] * len(pop)
         if MULTI_THREADING:
-            threads = [None] * len(pop)
-            for i in range(len(threads)):
-                threads[i] = Thread(target=self.map_fitness_function, args=(pop[i], results, i))
-                threads[i].start()
-
-            for i in range(len(threads)):
-                threads[i].join()
+            total_length_of_unprocessed_pop = len(pop)
+            iter_count = 0
+            while total_length_of_unprocessed_pop != 0:
+                threads = [None] * min(total_length_of_unprocessed_pop, NUMBER_OF_EVALUATING_POP_PER_BATCH)
+                for i in range(len(threads)):
+                    count = iter_count * NUMBER_OF_EVALUATING_POP_PER_BATCH + i
+                    print(count)
+                    threads[i] = Thread(target=self.map_fitness_function, args=(pop[count], results, count))
+                    threads[i].start()
+                for i in range(len(threads)):
+                    threads[i].join()
+                iter_count += 1
+                total_length_of_unprocessed_pop -= NUMBER_OF_EVALUATING_POP_PER_BATCH
         else:
             for i in range(len(pop)):
                 self.map_fitness_function(pop[i], results, i)
@@ -165,17 +172,20 @@ class GeneticAlgorithmRunner:
     def fitness_function(self, individual):
         result = []
         results = [None] * FITNESS_FUNCTION_AVERAGE_COUNT
-        if MULTI_THREADING:
-            threads = [None] * FITNESS_FUNCTION_AVERAGE_COUNT
-            for i in range(len(threads)):
-                threads[i] = Thread(target=self.thread_fitness_function, args=(individual, results, i))
-                threads[i].start()
+        # if MULTI_THREADING:
+        #     threads = [None] * FITNESS_FUNCTION_AVERAGE_COUNT
+        #     for i in range(len(threads)):
+        #         threads[i] = Thread(target=self.thread_fitness_function, args=(individual, results, i))
+        #         threads[i].start()
 
-            for i in range(len(threads)):
-                threads[i].join()
-        else:
-            for i in range(FITNESS_FUNCTION_AVERAGE_COUNT):
-                self.thread_fitness_function(individual, results, i)
+        #     for i in range(len(threads)):
+        #         threads[i].join()
+        # else:
+        #     for i in range(FITNESS_FUNCTION_AVERAGE_COUNT):
+        #         self.thread_fitness_function(individual, results, i)
+        ## TODO: Implement batch processing on the java side
+        for i in range(FITNESS_FUNCTION_AVERAGE_COUNT):
+            self.thread_fitness_function(individual, results, i)
         mean = reduce(lambda x, y: x + y, results) / len(results)
         sum2 = sum(x*x for x in results)
         std = abs(sum2 / len(results) - mean**2)**0.5
