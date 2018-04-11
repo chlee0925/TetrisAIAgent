@@ -2,6 +2,7 @@ import random
 import sys
 import subprocess
 import numpy as np
+import math
 from threading import Thread
 from pickle import load
 from pickle import dump
@@ -17,7 +18,6 @@ creator.create("Individual", list, fitness=creator.FitnessMax, min=0, max=0, std
 # Constants
 MULTI_THREADING = True
 NUMBER_OF_WEIGHTS = 5
-MUTATION_GENE_RATE = 0.1
 MUTATION_GENE_INDIVIDUAL_RATE = 0.2
 CROSSOVER_RATE = 0.5
 GENERATION_COUNT = 100
@@ -43,8 +43,6 @@ class GeneticAlgorithmRunner:
         self._toolbox.register("evaluate", self.fitness_function)
         # register the crossover operator
         self._toolbox.register("mate", tools.cxOnePoint)
-        # register a mutation operator with a probability to flip each attribute/gene with probability
-        self._toolbox.register("mutate", tools.mutUniformInt, indpb=MUTATION_GENE_RATE, low=0, up=1)
         self._toolbox.register("select", tools.selTournament, tournsize=10)
 
     def init_population(self):
@@ -113,7 +111,8 @@ class GeneticAlgorithmRunner:
     def mutate(self, pop):
         for mutant in pop:
             if random.random() < MUTATION_GENE_INDIVIDUAL_RATE:
-                self._toolbox.mutate(mutant)
+                random_index = int(math.floor(4 * random.random()))
+                mutant[random_index] = min(mutant[random_index] + (random.random() * 2 / 5) - 0.2, 1)
                 del mutant.fitness.values
         return pop
 
