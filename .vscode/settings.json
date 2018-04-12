@@ -1,6 +1,5 @@
 {
      "editor.tabSize": 4,
      "editor.insertSpaces": true,
-    "editor.detectIndentation": false,
-    "python.pythonPath": "/Users/admin/anaconda3/envs/CS3243/bin/python"
+    "editor.detectIndentation": false
 }
