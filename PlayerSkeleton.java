@@ -14,7 +14,7 @@ public class PlayerSkeleton {
                                                 , 1.0, 1.0, 1.0, 1.0, 1.0
                                                 , 1.0, 1.0, 1.0, 1.0, 1.0
                                                 , 1.0, 1.0, 1.0, 1.0, 1.0
-                                                , 2.0};
+                                                , 2.0, 1.0, 1.0, 1.0, 1.0};
 
 	public PlayerSkeleton() {
 	}
@@ -136,7 +136,7 @@ public class PlayerSkeleton {
 			/////////////////////////////////
 
 			// Calculate the evaluation value
-			double evaluationValue = evaluationFunction(tempField, tempTop, rowsCleared);
+			double evaluationValue = evaluationFunction(tempField, tempTop, height, rowsCleared);
 			if (evaluationValue > currentBest) {
 				currentBest = evaluationValue;
 				moveDecision = moveIndex;
@@ -146,7 +146,7 @@ public class PlayerSkeleton {
 		return moveDecision;
 	}
 
-	public double evaluationFunction(int[][] field, int[] top, int rowsCleared) {
+	public double evaluationFunction(int[][] field, int[] top, int landingHeight, int rowsCleared) {
 		final int featureColumnHeightIndex = 1;
 		final int featureAbsoluteAdjColumnHeightDiffIndex = 11;
 
@@ -166,7 +166,20 @@ public class PlayerSkeleton {
 			- (weightVectors[20]) * featureMaxColumnHeight(top)
 
 			// FEATURE 21 - NUM OF HOLES
-			- (weightVectors[21]) * featureNumOfHoles(field, top);
+            - (weightVectors[21]) * featureNumOfHoles(field, top)
+            
+            // FEATURE 22 - Landing height
+            - (weightVectors[22]) * landingHeight
+            
+            // FEATURE 23 - Cell Transition
+            - (weightVectors[23]) * featureCellTransitions(field, top)
+            
+            // FEATURE 24 - Height Difference Sum
+            - (weightVectors[24]) * featureHeightDiffSum(top)
+            
+            // FEATURE 25 - Mean column height
+            - (weightVectors[25]) * featureMeanColumnHeight(top);
+
 	}
 
 	///////////////////////////////////////
@@ -191,13 +204,7 @@ public class PlayerSkeleton {
 	 * FEATURE 20 - Maximum height across all columns
 	 */
 	public int featureMaxColumnHeight(int[] top) {
-		int maxHeight = 0;
-		for (int height : top) {
-			if (maxHeight < height) {
-				maxHeight = height;
-			}
-		}
-		return maxHeight;
+		return getMaxColHeight(top);
 	}
 
 	/**
@@ -214,9 +221,61 @@ public class PlayerSkeleton {
 			}
 		}
 		return holes;
-	}
+    }
 
-    /* FEATURE 26 - Depth of Wells (number of blocks in wells)
+    /**
+     * FEATURE 23 - The number of empty cells/borders touching the edges of full cells.
+     */
+    public int featureCellTransitions(int[][] field, int[] top) {
+        int numOfCellTrns = 0;
+
+        int[] rowTrans = {1, -1, 0, 0};
+        int[] colTrans = {0, 0, 1, -1};
+
+        int maxHeight = getMaxColHeight(top);
+        for (int col = 0; col < top.length; col++) {
+            for (int row = 0; row <= maxHeight; row++) {
+                if (!isPositionValid(row, col)) continue;
+                if (field[row][col] != 0) continue; // only interested in empty cell
+                
+                boolean isCellTransition = false;
+                for (int i = 0; i < 4; i++) { // four neighbours
+                    int neighRow = row + rowTrans[i];
+                    int neighCol = col + colTrans[i];
+
+                    if (isPositionValid(neighRow, neighCol) && field[neighRow][neighCol] != 0) {
+                       isCellTransition = true;
+                       break;
+                    }
+                }
+
+                if (isCellTransition) numOfCellTrns++;
+            }
+        }
+
+        return numOfCellTrns;
+    }
+
+    /**
+     * FEATURE 24 - Height difference sum. Sum of the height differences between adjacent columns
+     */
+    public int featureHeightDiffSum(int[] top) {
+        int heightDiffSum = 0;
+        for (int col = 0; col < top.length - 1; col++) {
+            heightDiffSum += Math.abs(top[col] - top[col + 1]);
+        }
+        return heightDiffSum;
+    }
+
+    /**
+     * FEATURE 25 - Mean column height
+     */
+    public double featureMeanColumnHeight(int[] top) {
+        return Arrays.stream(top).mapToDouble(height -> (double) height).average().getAsDouble();
+    }
+    
+	/**
+	 * FEATURE 26 - Depth of Wells (number of blocks in wells)
 	 */
 	public int featureDepthOfWells(int[] top) {
 		int wells = 0;
@@ -306,9 +365,9 @@ public class PlayerSkeleton {
         return colTransition;
     }
 
-	//////////////////////////////////
-	///////////  REWARD  /////////////
-	//////////////////////////////////
+    ///////////////////////////////////////////////
+    ///////////  AUXILIARY FUNCTIONS  /////////////
+    ///////////////////////////////////////////////
 
 	public int getMinColHeight(int[] top) {
 		int minHeight = Integer.MAX_VALUE;
@@ -318,6 +377,24 @@ public class PlayerSkeleton {
 			}
 		}
 		return minHeight;
-	}
+    }
+
+    public int getMaxColHeight(int[] top) {
+        int maxHeight = 0;
+        for (int height : top) {
+            if (maxHeight < height) {
+                maxHeight = height;
+            }
+        }
+        return maxHeight;
+    }
+    
+    /**
+     * @param row row index
+     * @param col col index
+     */
+    public boolean isPositionValid(int row, int col) {
+        return (row >= 0) && (row < ROWS - 1) && (col >= 0) && (col < COLS);
+    }
 
 }
