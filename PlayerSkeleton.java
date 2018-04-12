@@ -166,10 +166,7 @@ public class PlayerSkeleton {
 			- (weightVectors[20]) * featureMaxColumnHeight(top)
 
 			// FEATURE 21 - NUM OF HOLES
-			- (weightVectors[21]) * featureNumOfHoles(field, top)
-            
-            - (weightVectors[20]) * featureColumnBreaks(field)
-            - (weightVectors[20]) * featureRowBreaks(field);
+			- (weightVectors[21]) * featureNumOfHoles(field, top);
 	}
 
 	///////////////////////////////////////
@@ -272,21 +269,21 @@ public class PlayerSkeleton {
  	 * ADDITIONAL FEATURE - Col breaks: Number of transitions between a filled and empty cell in a column
  	 */
     public static int featureColumnBreaks(int[][] field) {
-        int columnTransition = 0;
+        int colTransition = 0;
         int previousState = 1;
         for (int col = 0; col < COLS; col++) {
             for (int row = 0; row < ROWS - 1; row++) {
                 if ((field[row][col] != 0) != (previousState != 0)) {
-                    columnTransition++;
+                    colTransition++;
                 }
                 if (field[ROWS - 1][col] == 0) {
-                    columnTransition++;
+                    colTransition++;
                 }
                 previousState = field[row][col];
             }
             previousState = 1;
         }
-        return columnTransition;
+        return colTransition;
     }
 
 	/* FEATURE 5 - Depth of Wells (number of blocks in wells)
