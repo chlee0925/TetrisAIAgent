@@ -215,9 +215,29 @@ public class PlayerSkeleton {
 		}
 		return holes;
 	}
+
+    /* FEATURE 26 - Depth of Wells (number of blocks in wells)
+	 */
+	public int featureDepthOfWells(int[] top) {
+		int wells = 0;
+		int depth = 0;
+		for (int i=0; i<top.length; i++) {
+			if (i==0) {
+				depth = top[i+1] - top[i];
+			} else if (i == top.length-1) {
+				depth = top[i-1] - top[i];
+			} else {
+				depth = Math.min(top[i+1], top[i-1]) - top[i];
+			}
+			if(depth > 0){
+				wells += depth;
+			}
+		}
+		return wells;
+	}
     
     /**
-	 * ADDITIONAL FEATURE - Height weighted cells: Full cells weighted by their height
+	 * FEATURE 27 - Height weighted cells: Full cells weighted by their height
 	 */
     public int featureHeightWeightedCells(int[][] field, int[] top) {
         int sum = 0;
@@ -230,7 +250,7 @@ public class PlayerSkeleton {
     }
 
 	/**
- 	 * ADDITIONAL FEATURE - Full cells: Number of occupied cells on the board
+ 	 * FEATURE 28 - Full cells: Number of occupied cells on the board
  	 */
 	public int featureNumOfFullCells(int[][] field, int[] top) {
 		int fullCells = 0;
@@ -245,7 +265,7 @@ public class PlayerSkeleton {
 	}
 
     /**
- 	 * ADDITIONAL FEATURE - Row breaks: Number of transitions between a filled and empty cell in a row
+ 	 * FEATURE 29 - Row breaks: Number of transitions between a filled and empty cell in a row
  	 */
     public static int featureRowBreaks(int[][] field) {
         int rowTransition = 0;
@@ -266,7 +286,7 @@ public class PlayerSkeleton {
     }
 
     /**
- 	 * ADDITIONAL FEATURE - Col breaks: Number of transitions between a filled and empty cell in a column
+ 	 * FEATURE 30 - Col breaks: Number of transitions between a filled and empty cell in a column
  	 */
     public static int featureColumnBreaks(int[][] field) {
         int colTransition = 0;
@@ -285,26 +305,6 @@ public class PlayerSkeleton {
         }
         return colTransition;
     }
-
-	/* FEATURE 5 - Depth of Wells (number of blocks in wells)
-	 */
-	public int featureDepthOfWells(int[] top) {
-		int wells = 0;
-		int depth = 0;
-		for (int i=0; i<top.length; i++) {
-			if (i==0) {
-				depth = top[i+1] - top[i];
-			} else if (i == top.length-1) {
-				depth = top[i-1] - top[i];
-			} else {
-				depth = Math.min(top[i+1], top[i-1]) - top[i];
-			}
-			if(depth > 0){
-				wells += depth;
-			}
-		}
-		return wells;
-	}
 
 	//////////////////////////////////
 	///////////  REWARD  /////////////
