@@ -136,7 +136,7 @@ public class PlayerSkeleton {
 			/////////////////////////////////
 
 			// Calculate the evaluation value
-			double evaluationValue = evaluationFunction(field, tempTop, height, rowsCleared);
+			double evaluationValue = evaluationFunction(tempField, tempTop, height, rowsCleared);
 			if (evaluationValue > currentBest) {
 				currentBest = evaluationValue;
 				moveDecision = moveIndex;
