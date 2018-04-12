@@ -1,20 +1,27 @@
 import java.util.*;
+import java.util.stream.*;
 
 public class PlayerSkeleton {
-
-	List<Integer> cols = Arrays.asList(new Integer[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 });
 	public static final int COLS = 10;
 	public static final int ROWS = 21;
 	public static final int N_PIECES = 7;
+    public double[] weightVectors = new double[]{ 
+                                                // Reward
+                                                20.0
+        
+                                                // Features
+                                                , 1.0, 1.0, 1.0, 1.0, 1.0 
+                                                , 1.0, 1.0, 1.0, 1.0, 1.0
+                                                , 1.0, 1.0, 1.0, 1.0, 1.0
+                                                , 1.0, 1.0, 1.0, 1.0, 1.0
+                                                , 2.0};
 
-	public double[] weightVectors = {20.0 // Reward
-									, 1.0, 1.0, 1.0, 1.0, 1.0 // Features
-									, 1.0, 1.0, 1.0, 1.0, 1.0
-									, 1.0, 1.0, 1.0, 1.0, 1.0
-									, 1.0, 1.0, 1.0, 1.0, 1.0
-									, 2.0
-									, 1.0, 1.0, 1.0 // Additional Features
-									};
+	public PlayerSkeleton() {
+	}
+
+	public PlayerSkeleton(ArrayList<Double> weightOverride) {
+        for(int i = 0; i < weightOverride.size(); i++) if (i < this.weightVectors.length) this.weightVectors[i]=weightOverride.get(i);
+	}
 
 	public int pickMove(State s, int[][] legalMoves) {
 		return pickMoveImpl(s.getField(), legalMoves, s.getTop(), s.getpOrients(), s.getpWidth(), s.getpHeight(), s.getpBottom(), s.getpTop(), s.getNextPiece());
@@ -22,8 +29,17 @@ public class PlayerSkeleton {
 
 	public static void main(String[] args) {
 		State s = new State();
-		new TFrame(s);
-		PlayerSkeleton p = new PlayerSkeleton();
+        new TFrame(s);
+
+        // Override weight vectors if provided
+        PlayerSkeleton p = new PlayerSkeleton(Arrays.asList(args).stream().mapToDouble(weightStr -> Double.parseDouble(weightStr)).boxed().collect(Collectors.toCollection(ArrayList::new)));
+
+        // Print out the weight vectors used
+		for(int wIndex = 0; wIndex < p.weightVectors.length; wIndex++) {
+			System.out.print(p.weightVectors[wIndex]+",");
+        }
+        System.out.println();
+        
 		while (!s.hasLost()) {
 			s.makeMove(p.pickMove(s, s.legalMoves()));
 			s.draw();
@@ -116,22 +132,20 @@ public class PlayerSkeleton {
 			(weightVectors[0]) * rewardRowsToBeCleared(field, top)
 
 			// FEATURE 1~10 - COLUMN HEIGHT
-			- (cols.stream().mapToDouble(col -> (weightVectors[featureColumnHeightIndex+col]) * featureColumnHeight(top, col)).sum())
+			- (IntStream.rangeClosed(0,9).mapToDouble(col -> (weightVectors[featureColumnHeightIndex+col]) * featureColumnHeight(top, col)).sum())
 
 			// FEATURE 11~19 - ABSOLUTE HEIGHT DIFF
-			- (cols.stream().filter(col -> { return col <= 8; })
+			- (IntStream.rangeClosed(0,8)
 				.mapToDouble(col -> (weightVectors[featureAbsoluteAdjColumnHeightDiffIndex+col]) * featureAbsoluteAdjColumnHeightDiff(top, col)).sum())
 
 			// FEATURE 20 - MAX HEIGHT
 			- (weightVectors[20]) * featureMaxColumnHeight(top)
 
 			// FEATURE 21 - NUM OF HOLES
-			- (weightVectors[21]) * featureNumOfHoles(field, top);
-
-			// ADDITIONAL FEATURES
-		//	- (weightVectors[22]) * featureHeightWeightedCells(field, top);
-		//	- (weightVectors[23]) * featureDepthOfWells(field, top);
-		//	- (weightVectors[24]) * featureNumOfFullCells(field, top);
+			- (weightVectors[21]) * featureNumOfHoles(field, top)
+            
+            - (weightVectors[20]) * featureColumnBreaks(field)
+            - (weightVectors[20]) * featureRowBreaks(field);
 	}
 
 	///////////////////////////////////////
@@ -180,43 +194,96 @@ public class PlayerSkeleton {
 		}
 		return holes;
 	}
-
-	/**
+    
+    /**
 	 * ADDITIONAL FEATURE - Height weighted cells: Full cells weighted by their height
 	 */
-	 public int featureHeightWeightedCells(int[][] field, int[] top) {
-		 int sum = 0;
-		 for (int i=0; i<top.length; i++) {
- 			for (int j=0; j<top[i]; j++) {
-				if (field[j][i] != 0) sum += j + 1; // weight of row 0 = 1
+    public int featureHeightWeightedCells(int[][] field, int[] top) {
+        int sum = 0;
+        for (int i=0; i<top.length; i++) {
+            for (int j=0; j<top[i]; j++) {
+                if (field[j][i] != 0) sum += j + 1; // weight of row 0 = 1
  			}
  		}
 		return sum;
-	 }
+    }
 
-	 /**
- 	 * ADDITIONAL FEATURE - Wells: Sum of the depth of the wells
- 	 */
-	 public int featureDepthOfWells(int[][] field, int[] top) {
-		 // need a clearer definition of wells
-		 return 0;
-	 }
-
-	 /**
+	/**
  	 * ADDITIONAL FEATURE - Full cells: Number of occupied cells on the board
  	 */
-	 public int featureNumOfFullCells(int[][] field, int[] top) {
-		 int fullCells = 0;
-		 for (int i=0; i<top.length; i++) {
-			 for (int j=0; j<top[i]; j++) {
-				 if (field[j][i] != 0) {
-					 fullCells++;
-				 }
-			 }
+	public int featureNumOfFullCells(int[][] field, int[] top) {
+		int fullCells = 0;
+		for (int i=0; i<top.length; i++) {
+			for (int j=0; j<top[i]; j++) {
+				if (field[j][i] != 0) {
+					fullCells++;
+				}
+			}
  		}
  		return fullCells;
-	 }
+	}
 
+    /**
+ 	 * ADDITIONAL FEATURE - Row breaks: Number of transitions between a filled and empty cell in a row
+ 	 */
+    public static int featureRowBreaks(int[][] field) {
+        int rowTransition = 0;
+        int previousState = 1;
+        for (int row = 0; row < ROWS - 1; row++) {
+            for (int col = 0; col < COLS; col++) {
+                if ((field[row][col] != 0) != (previousState != 0)) {
+                    rowTransition++;
+                }
+                previousState = field[row][col];
+            }
+            if (field[row][COLS - 1] == 0) {
+                rowTransition++;
+            }
+            previousState = 1;
+        }
+        return rowTransition;
+    }
+
+    /**
+ 	 * ADDITIONAL FEATURE - Col breaks: Number of transitions between a filled and empty cell in a column
+ 	 */
+    public static int featureColumnBreaks(int[][] field) {
+        int columnTransition = 0;
+        int previousState = 1;
+        for (int col = 0; col < COLS; col++) {
+            for (int row = 0; row < ROWS - 1; row++) {
+                if ((field[row][col] != 0) != (previousState != 0)) {
+                    columnTransition++;
+                }
+                if (field[ROWS - 1][col] == 0) {
+                    columnTransition++;
+                }
+                previousState = field[row][col];
+            }
+            previousState = 1;
+        }
+        return columnTransition;
+    }
+
+	/* FEATURE 5 - Depth of Wells (number of blocks in wells)
+	 */
+	public int featureDepthOfWells(int[] top) {
+		int wells = 0;
+		int depth = 0;
+		for (int i=0; i<top.length; i++) {
+			if (i==0) {
+				depth = top[i+1] - top[i];
+			} else if (i == top.length-1) {
+				depth = top[i-1] - top[i];
+			} else {
+				depth = Math.min(top[i+1], top[i-1]) - top[i];
+			}
+			if(depth > 0){
+				wells += depth;
+			}
+		}
+		return wells;
+	}
 
 	//////////////////////////////////
 	///////////  REWARD  /////////////
