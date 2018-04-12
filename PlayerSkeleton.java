@@ -59,7 +59,12 @@ public class PlayerSkeleton {
 	 */
 	public int pickMoveImpl(int[][] field, int[][] legalMoves, int[] top, int[] pOrient, int[][] pWidth, int[][] pHeight, int[][][] pBottom, int[][][] pTop, int nextPiece) {
 		int moveDecision = 0;
-		double currentBest = Double.NEGATIVE_INFINITY;
+        double currentBest = Double.NEGATIVE_INFINITY;
+        int[][] tempField = new int[field.length][];
+        for(int i = 0; i < tempField.length; i++) {
+            tempField[i] = Arrays.copyOf(field[i], field[i].length);
+        }
+
 		for (int moveIndex = 0; moveIndex < legalMoves.length; moveIndex++) {
 			int[] move = legalMoves[moveIndex];
 			int orient = move[0];
@@ -85,7 +90,7 @@ public class PlayerSkeleton {
 			for (int i = 0; i < pWidth[nextPiece][orient]; i++) {
 				//from bottom to top of brick
 				for (int h = height + pBottom[nextPiece][orient][i]; h < height + pTop[nextPiece][orient][i]; h++) {
-					field[h][i + slot] = Integer.MAX_VALUE;
+					tempField[h][i + slot] = Integer.MAX_VALUE;
 				}
 			}
 			// Create temporary top
@@ -100,7 +105,7 @@ public class PlayerSkeleton {
 			/////////////////////////////////
 
 			// Calculate the evaluation value
-			double evaluationValue = evaluationFunction(field, tempTop);
+			double evaluationValue = evaluationFunction(tempField, tempTop);
 			if (evaluationValue > currentBest) {
 				currentBest = evaluationValue;
 				moveDecision = moveIndex;
@@ -114,7 +119,7 @@ public class PlayerSkeleton {
 			for (int i = 0; i < pWidth[nextPiece][orient]; i++) {
 				//from bottom to top of brick
 				for (int h = height + pBottom[nextPiece][orient][i]; h < height + pTop[nextPiece][orient][i]; h++) {
-					field[h][i + slot] = 0; // Undo
+					tempField[h][i + slot] = 0; // Undo
 				}
 			}
 		}
