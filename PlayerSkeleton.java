@@ -60,25 +60,29 @@ public class PlayerSkeleton {
 	public int pickMoveImpl(int[][] field, int[][] legalMoves, int[] top, int[] pOrient, int[][] pWidth, int[][] pHeight, int[][][] pBottom, int[][][] pTop, int nextPiece) {
 		int moveDecision = 0;
         double currentBest = Double.NEGATIVE_INFINITY;
-        int[][] tempField = new int[field.length][];
-        for(int i = 0; i < tempField.length; i++) {
-            tempField[i] = Arrays.copyOf(field[i], field[i].length);
-        }
-
+        
 		for (int moveIndex = 0; moveIndex < legalMoves.length; moveIndex++) {
 			int[] move = legalMoves[moveIndex];
 			int orient = move[0];
-			int slot = move[1];
+            int slot = move[1];
+            
+            // Create temporary field to simulate a move
+            int[][] tempField = new int[field.length][];
+            for(int i = 0; i < tempField.length; i++) {
+                tempField[i] = Arrays.copyOf(field[i], field[i].length);
+            }
+            // Create temporary top to simulate a move
+			int[] tempTop = Arrays.copyOf(top, top.length);
 
 			///////////////
 			///Make Move///
 			///////////////
 
 			// Find height where the piece is placed at
-			int height = top[slot] - pBottom[nextPiece][orient][0];
-			//for each column beyond the first in the piece
+			int height = tempTop[slot] - pBottom[nextPiece][orient][0];
+			// For each column beyond the first in the piece
 			for (int c = 1; c < pWidth[nextPiece][orient]; c++) {
-				height = Math.max(height, top[slot + c] - pBottom[nextPiece][orient][c]);
+				height = Math.max(height, tempTop[slot + c] - pBottom[nextPiece][orient][c]);
 			}
 
 			// If the game is going to end, try the next move
@@ -93,48 +97,63 @@ public class PlayerSkeleton {
 					tempField[h][i + slot] = Integer.MAX_VALUE;
 				}
 			}
-			// Create temporary top
-			int[] tempTop = Arrays.copyOf(top, top.length);
+			
 			//adjust tempoaray top
 			for(int c = 0; c < pWidth[nextPiece][orient]; c++) {
 				tempTop[slot+c]=height+pTop[nextPiece][orient][c];
-			}
+            }
+
+            int rowsCleared = 0;
+            
+            //check for full rows - starting at the top
+            for(int r = height+pHeight[nextPiece][orient]-1; r >= height; r--) {
+                //check all columns in the row
+                boolean full = true;
+                for(int c = 0; c < COLS; c++) {
+                    if(tempField[r][c] == 0) {
+                        full = false;
+                        break;
+                    }
+                }
+                //if the row was full - remove it and slide above stuff down
+                if(full) {
+                    rowsCleared++;
+                    //for each column
+                    for(int c = 0; c < COLS; c++) {
+                        //slide down all bricks
+                        for(int i = r; i < tempTop[c]; i++) {
+                            tempField[i][c] = tempField[i+1][c];
+                        }
+                        //lower the top
+                        tempTop[c]--;
+                        while(tempTop[c]>=1 && tempField[tempTop[c]-1][c]==0) tempTop[c]--;
+                    }
+                }
+            }
 
 			/////////////////////////////////
 			///Run the evaluation function///
 			/////////////////////////////////
 
 			// Calculate the evaluation value
-			double evaluationValue = evaluationFunction(tempField, tempTop);
+			double evaluationValue = evaluationFunction(tempField, tempTop, rowsCleared);
 			if (evaluationValue > currentBest) {
 				currentBest = evaluationValue;
 				moveDecision = moveIndex;
-			}
-
-			////////////////////////////////
-			///Restore the original state///
-			////////////////////////////////
-
-			// Restore the original field
-			for (int i = 0; i < pWidth[nextPiece][orient]; i++) {
-				//from bottom to top of brick
-				for (int h = height + pBottom[nextPiece][orient][i]; h < height + pTop[nextPiece][orient][i]; h++) {
-					tempField[h][i + slot] = 0; // Undo
-				}
 			}
 		}
 
 		return moveDecision;
 	}
 
-	public double evaluationFunction(int[][] field, int[] top) {
+	public double evaluationFunction(int[][] field, int[] top, int rowsCleared) {
 		final int featureColumnHeightIndex = 1;
 		final int featureAbsoluteAdjColumnHeightDiffIndex = 11;
 
 		return
 
 			// INDEX 0 - REWARD
-			(weightVectors[0]) * rewardRowsToBeCleared(field, top)
+			(weightVectors[0]) * rowsCleared
 
 			// FEATURE 1~10 - COLUMN HEIGHT
 			- (IntStream.rangeClosed(0,9).mapToDouble(col -> (weightVectors[featureColumnHeightIndex+col]) * featureColumnHeight(top, col)).sum())
@@ -221,23 +240,6 @@ public class PlayerSkeleton {
 	//////////////////////////////////
 	///////////  REWARD  /////////////
 	//////////////////////////////////
-
-	public int rewardRowsToBeCleared(int[][] field, int[] top) {
-		int rowsCleared = 0;
-		for (int i=0; i<getMinColHeight(top); i++) {
-			boolean isFullRow = true;
-			for (int j=0; j<field[i].length; j++) {
-				if (field[i][j] == 0) {
-					isFullRow = false;
-					break;
-				}
-			}
-			if (isFullRow) {
-				rowsCleared++;
-			}
-		}
-		return rowsCleared;
-	}
 
 	public int getMinColHeight(int[] top) {
 		int minHeight = Integer.MAX_VALUE;
