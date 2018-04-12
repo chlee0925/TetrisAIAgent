@@ -123,3 +123,20 @@ This is a drawing library.
 
 ## PlayerSkeleton:
 The main function plays a game automatically (with visualization).
+
+## Running on Tembusu Cluster
+
+1. Enable Tembusu Cluster service in https://mysoc.nus.edu.sg/~myacct/services.cgi
+2. After enabling it, scp this repo into the cluster. 
+```
+scp -rp TetrisAIAgent/ <username>@<hostname>.comp.nus.edu.sg:~
+```
+
+Refer to the list of hostname available using this link: https://docs.comp.nus.edu.sg/node/1814
+
+3. ssh into the cluster and start training
+```
+ssh <username>@<hostname>.comp.nus.edu.sg
+cd TetrisAIAgent
+./run.sh --train
+```
