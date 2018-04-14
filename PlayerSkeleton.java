@@ -296,36 +296,36 @@ public class PlayerSkeleton {
 	}
     
     /**
-	 * FEATURE 27 - Height weighted cells: Full cells weighted by their height
-	 */
+     * FEATURE 27 - Height weighted cells: Full cells weighted by their height
+     */
     public int featureHeightWeightedCells(int[][] field, int[] top) {
         int sum = 0;
         for (int i=0; i<top.length; i++) {
             for (int j=0; j<top[i]; j++) {
                 if (field[j][i] != 0) sum += j + 1; // weight of row 0 = 1
- 			}
- 		}
-		return sum;
+            }
+        }
+        return sum;
     }
 
-	/**
- 	 * FEATURE 28 - Full cells: Number of occupied cells on the board
- 	 */
-	public int featureNumOfFullCells(int[][] field, int[] top) {
-		int fullCells = 0;
-		for (int i=0; i<top.length; i++) {
-			for (int j=0; j<top[i]; j++) {
-				if (field[j][i] != 0) {
-					fullCells++;
-				}
-			}
- 		}
- 		return fullCells;
-	}
+    /**
+     * FEATURE 28 - Full cells: Number of occupied cells on the board
+     */
+    public int featureNumOfFullCells(int[][] field, int[] top) {
+        int fullCells = 0;
+        for (int i=0; i<top.length; i++) {
+            for (int j=0; j<top[i]; j++) {
+               if (field[j][i] != 0) {
+                   fullCells++;
+               }
+            }
+        }
+        return fullCells;
+    }
 
     /**
- 	 * FEATURE 29 - Row breaks: Number of transitions between a filled and empty cell in a row
- 	 */
+     * FEATURE 29 - Row breaks: Number of transitions between a filled and empty cell in a row
+     */
     public int featureRowBreaks(int[][] field, int[] top) {
         int rowTransition = 0;
         int maxHeight = getMaxColHeight(top);
@@ -342,13 +342,13 @@ public class PlayerSkeleton {
     }
 
     /**
- 	 * FEATURE 30 - Col breaks: Number of transitions between a filled and empty cell in a column
- 	 */
-    public int featureColumnBreaks(int[][] field) {
+     * FEATURE 30 - Col breaks: Number of transitions between a filled and empty cell in a column
+     */
+    public int featureColumnBreaks(int[][] field, int[] top) {
         int colTransition = 0;
         for (int col = 0; col < COLS; col++) {
             int previousState = field[0][col];
-            for (int row = 1; row < ROWS; row++) {
+            for (int row = 1; row < top[col]; row++) {
                 if ((field[row][col] != 0) != (previousState != 0)) {
                     colTransition++;
                 }
