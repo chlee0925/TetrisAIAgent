@@ -20,7 +20,9 @@ MUTATION_GENE_INDIVIDUAL_RATE = 0.2
 CROSSOVER_RATE = 0.5
 GENERATION_COUNT = 100
 POPULATION_SIZE = 1000
-FITNESS_FUNCTION_AVERAGE_COUNT = 5
+# We will invoke the java player 5 times, in which each java player will run 10 games
+# We will have statistics of 50 games in the end
+PLAYER_INVOKE_AMOUNT = 5
 LAST_GENERATION_FILE_NAME = "last_gen.pickle"
 NUMBER_OF_EVALUATING_POP_PER_BATCH = 10
 GENERATION_DIR = "generations/"
@@ -144,8 +146,8 @@ class GeneticAlgorithmRunner:
     # Given an individual, calculate its fitness value
     def fitness_function(self, individual):
         result = []
-        results = [None] * FITNESS_FUNCTION_AVERAGE_COUNT
-        for i in range(FITNESS_FUNCTION_AVERAGE_COUNT):
+        results = [None] * PLAYER_INVOKE_AMOUNT
+        for i in range(PLAYER_INVOKE_AMOUNT):
             self.thread_fitness_function(individual, results, i)
         mean = reduce(lambda x, y: x + y, results) / len(results)
         sum2 = sum(x*x for x in results)
