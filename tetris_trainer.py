@@ -27,7 +27,7 @@ LAST_GENERATION_FILE_NAME = "last_gen.pickle"
 NUMBER_OF_EVALUATING_POP_PER_BATCH = 10
 GENERATION_DIR = "generations/"
 
-# If the individual is able to clear at least TURN - NEGLECTABLE_ERROR, then this individual can be
+# If the individual is able to clear at least TURN * 0.4 - NEGLECTABLE_ERROR, then this individual can be
 # categorised as well performing individual
 TURN = 1000
 NEGLECTABLE_ERROR = 15
