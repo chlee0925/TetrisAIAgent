@@ -215,7 +215,7 @@ public class PlayerSkeleton {
 		int holes = 0;
 		for (int i=0; i<top.length; i++) {
 			for (int j=0; j<top[i]; j++) {
-				if (field[j][i] == 0 && field[j+1][i] != 0) {
+				if (field[j][i] == 0) {
 					holes++;
 				}
 			}
@@ -326,10 +326,10 @@ public class PlayerSkeleton {
     /**
  	 * FEATURE 29 - Row breaks: Number of transitions between a filled and empty cell in a row
  	 */
-    public static int featureRowBreaks(int[][] field) {
+    public static int featureRowBreaks(int[][] field, int[] top) {
         int rowTransition = 0;
         int previousState = 1;
-        for (int row = 0; row < ROWS - 1; row++) {
+        for (int row = 0; row < top.length; row++) {
             for (int col = 0; col < COLS; col++) {
                 if ((field[row][col] != 0) != (previousState != 0)) {
                     rowTransition++;
@@ -355,10 +355,10 @@ public class PlayerSkeleton {
                 if ((field[row][col] != 0) != (previousState != 0)) {
                     colTransition++;
                 }
-                if (field[ROWS - 1][col] == 0) {
-                    colTransition++;
-                }
                 previousState = field[row][col];
+            }
+            if (field[ROWS - 1][col] == 0) {
+                colTransition++;
             }
             previousState = 1;
         }
