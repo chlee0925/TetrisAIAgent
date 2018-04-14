@@ -301,6 +301,69 @@ public class PlayerSkeleton {
 		return wells;
 	}
     
+    /**
+     * FEATURE 27 - Height weighted cells: Full cells weighted by their height
+     */
+    public int featureHeightWeightedCells(int[][] field, int[] top) {
+        int sum = 0;
+        for (int i=0; i<top.length; i++) {
+            for (int j=0; j<top[i]; j++) {
+                if (field[j][i] != 0) sum += j + 1; // weight of row 0 = 1
+            }
+        }
+        return sum;
+    }
+
+    /**
+     * FEATURE 28 - Full cells: Number of occupied cells on the board
+     */
+    public int featureNumOfFullCells(int[][] field, int[] top) {
+        int fullCells = 0;
+        for (int i=0; i<top.length; i++) {
+            for (int j=0; j<top[i]; j++) {
+               if (field[j][i] != 0) {
+                   fullCells++;
+               }
+            }
+        }
+        return fullCells;
+    }
+
+    /**
+     * FEATURE 29 - Row breaks: Number of transitions between a filled and empty cell in a row
+     */
+    public int featureRowBreaks(int[][] field, int[] top) {
+        int rowTransition = 0;
+        int maxHeight = getMaxColHeight(top);
+        for (int row = 0; row < maxHeight; row++) {
+            int previousState = field[row][0];
+            for (int col = 1; col < COLS; col++) {
+                if ((field[row][col] != 0) != (previousState != 0)) {
+                    rowTransition++;
+                }
+                previousState = field[row][col];
+            }
+        }
+        return rowTransition;
+    }
+
+    /**
+     * FEATURE 30 - Col breaks: Number of transitions between a filled and empty cell in a column
+     */
+    public int featureColumnBreaks(int[][] field, int[] top) {
+        int colTransition = 0;
+        for (int col = 0; col < COLS; col++) {
+            int previousState = field[0][col];
+            for (int row = 1; row < top[col]; row++) {
+                if ((field[row][col] != 0) != (previousState != 0)) {
+                    colTransition++;
+                }
+                previousState = field[row][col];
+            }
+        }
+        return colTransition;
+    }
+
     ///////////////////////////////////////////////
     ///////////  AUXILIARY FUNCTIONS  /////////////
     ///////////////////////////////////////////////
