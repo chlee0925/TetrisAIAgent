@@ -15,7 +15,11 @@ public class PlayerSkeleton {
                                                 1.0, // 4 - Cell Transition
                                                 1.0, // 5 - Height Diff Sum
                                                 1.0, // 6 - Mean Column Height
-                                                1.0  // 7 - Depth Of Wells
+                                                1.0, // 7 - Depth Of Wells
+                                                1.0, // 8 - Height Weighted Cells
+                                                1.0, // 9 - Num Of Full Cells
+                                                1.0, // 10 - Row Breaks
+                                                1.0  // 11 - Col Breaks
                                             };
 
 	public PlayerSkeleton() {
@@ -162,23 +166,35 @@ public class PlayerSkeleton {
 
             // FEATURE 2 - Num Of Holes
             - (weightVectors[2]) * featureNumOfHoles(field, top)
-            
+
             // FEATURE 3 - Landing Height
             - (weightVectors[3]) * landingHeight
-            
+
             // FEATURE 4 - Cell Transition
             - (weightVectors[4]) * featureCellTransitions(field, top)
-            
+
             // FEATURE 5 - Height Diff Sum
             - (weightVectors[5]) * featureHeightDiffSum(top)
-            
+
             // FEATURE 6 - Mean Column Height
             - (weightVectors[6]) * featureMeanColumnHeight(top)
 
             // FEATURE 7 - Depth Of Wells
-            - (weightVectors[7]) * featureDepthOfWells(top);
+            - (weightVectors[7]) * featureDepthOfWells(top)
 
-	}
+            // FEATURE 8 - Height Weighted Cells
+            - (weightVectors[8]) * featureHeightWeightedCells(field, top)
+
+            // FEATURE 9 - Num Of Full Cells
+            - (weightVectors[9]) * featureNumOfFullCells(field, top)
+
+            // FEATURE 10 - Row Breaks
+            - (weightVectors[10]) * featureRowBreaks(field, top)
+
+            // FEATURE 11 - Col Breaks
+            - (weightVectors[11]) * featureColumnBreaks(field, top);
+
+    }
 
 	///////////////////////////////////////
 	///////////		FEATURES	///////////
@@ -302,7 +318,8 @@ public class PlayerSkeleton {
 	}
     
     /**
-     * FEATURE 27 - Height weighted cells: Full cells weighted by their height
+     * FEATURE 8 - Height Weighted Cells
+     * Sum of full cells weighted by their row number
      */
     public int featureHeightWeightedCells(int[][] field, int[] top) {
         int sum = 0;
@@ -315,7 +332,8 @@ public class PlayerSkeleton {
     }
 
     /**
-     * FEATURE 28 - Full cells: Number of occupied cells on the board
+     * FEATURE 9 - Num Of Full Cells
+     * Number of occupied cells on the board
      */
     public int featureNumOfFullCells(int[][] field, int[] top) {
         int fullCells = 0;
@@ -330,7 +348,8 @@ public class PlayerSkeleton {
     }
 
     /**
-     * FEATURE 29 - Row breaks: Number of transitions between a filled and empty cell in a row
+     * FEATURE 10 - Row BreaksRow Breaks
+     * Number of transitions between a filled and empty cell in each row
      */
     public int featureRowBreaks(int[][] field, int[] top) {
         int rowTransition = 0;
@@ -348,7 +367,8 @@ public class PlayerSkeleton {
     }
 
     /**
-     * FEATURE 30 - Col breaks: Number of transitions between a filled and empty cell in a column
+     * FEATURE 11 - Col Breaks
+     * Number of transitions between a filled and empty cell in each column
      */
     public int featureColumnBreaks(int[][] field, int[] top) {
         int colTransition = 0;
