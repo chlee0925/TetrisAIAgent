@@ -26,6 +26,12 @@ PLAYER_INVOKE_AMOUNT = 5
 LAST_GENERATION_FILE_NAME = "last_gen.pickle"
 NUMBER_OF_EVALUATING_POP_PER_BATCH = 10
 GENERATION_DIR = "generations/"
+
+# If the individual is able to clear at least TURN * 0.4 - NEGLECTABLE_ERROR, then this individual can be
+# categorised as well performing individual
+TURN = 1000
+NEGLECTABLE_ERROR = 15
+
 class GeneticAlgorithmRunner:
     def __init__(self, timestamp):
         self._timestamp = timestamp
@@ -80,7 +86,7 @@ class GeneticAlgorithmRunner:
         if MULTI_THREADING:
             total_length_of_unprocessed_pop = len(pop)
             iter_count = 0
-            while total_length_of_unprocessed_pop != 0:
+            while total_length_of_unprocessed_pop > 0:
                 threads = [None] * min(total_length_of_unprocessed_pop, NUMBER_OF_EVALUATING_POP_PER_BATCH)
                 for i in range(len(threads)):
                     count = iter_count * NUMBER_OF_EVALUATING_POP_PER_BATCH + i
@@ -105,15 +111,27 @@ class GeneticAlgorithmRunner:
                 mutant[random_index] = max(0, min(mutant[random_index] + (random.random() * 2 / 5) - 0.2, 1))
         return pop
 
+    def update_turn(self, pop):
+        global TURN
+        fitness_list = sorted(list(map(lambda x: x.fitness, pop)))
+        if fitness_list[int(POPULATION_SIZE * 0.5)] >= (TURN * 0.4) - NEGLECTABLE_ERROR:
+            print("-- More than half of the population are well performing --")
+            print("-- Doubling turn limit and re-evaluating population")
+            TURN *= 2
+            return self.evaluate_population(pop)
+        return pop
+
     def run(self, pop):
         for i in range(GENERATION_COUNT):
             print("-- Generation "+ str(i+1) + "--")
+            print("-- Number of turns: " + str(TURN) + "--")
             pop, offspring = self.selection(pop, tournsize=10)
             offspring = self.mutate(offspring)
             offspring = self.evaluate_population(offspring)
             pop.extend(offspring)
             self.report_current_generation(pop)
             self.saves_gen_into_disk(pop, GENERATION_DIR, i)
+            pop = self.update_turn(pop)
         return pop
 
     # Change this function to alter the generation reporting
@@ -141,7 +159,7 @@ class GeneticAlgorithmRunner:
         dump(pop, open(dir + self._timestamp + "/" + str(i+1) + ".pickle", "wb"))
 
     def thread_fitness_function(self, individual, results, i):
-        results[i] = int(subprocess.check_output(['java', '-classpath', "out/", "NoVisualPlayerSkeleton"] + [str(x) for x in individual]).strip())
+        results[i] = int(subprocess.check_output(['java', '-classpath', "out/", "NoVisualPlayerSkeleton", str(TURN)] + [str(x) for x in individual]).strip())
     
     # Given an individual, calculate its fitness value
     def fitness_function(self, individual):
