@@ -326,20 +326,17 @@ public class PlayerSkeleton {
     /**
  	 * FEATURE 29 - Row breaks: Number of transitions between a filled and empty cell in a row
  	 */
-    public static int featureRowBreaks(int[][] field, int[] top) {
+    public int featureRowBreaks(int[][] field, int[] top) {
         int rowTransition = 0;
-        int previousState = 1;
-        for (int row = 0; row < top.length; row++) {
-            for (int col = 0; col < COLS; col++) {
+        int maxHeight = getMaxColHeight(top);
+        for (int row = 0; row < maxHeight; row++) {
+            int previousState = field[row][0];
+            for (int col = 1; col < COLS; col++) {
                 if ((field[row][col] != 0) != (previousState != 0)) {
                     rowTransition++;
                 }
                 previousState = field[row][col];
             }
-            if (field[row][COLS - 1] == 0) {
-                rowTransition++;
-            }
-            previousState = 1;
         }
         return rowTransition;
     }
@@ -347,20 +344,16 @@ public class PlayerSkeleton {
     /**
  	 * FEATURE 30 - Col breaks: Number of transitions between a filled and empty cell in a column
  	 */
-    public static int featureColumnBreaks(int[][] field) {
+    public int featureColumnBreaks(int[][] field) {
         int colTransition = 0;
-        int previousState = 1;
         for (int col = 0; col < COLS; col++) {
-            for (int row = 0; row < ROWS - 1; row++) {
+            int previousState = field[0][col];
+            for (int row = 1; row < ROWS; row++) {
                 if ((field[row][col] != 0) != (previousState != 0)) {
                     colTransition++;
                 }
                 previousState = field[row][col];
             }
-            if (field[ROWS - 1][col] == 0) {
-                colTransition++;
-            }
-            previousState = 1;
         }
         return colTransition;
     }
