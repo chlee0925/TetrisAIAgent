@@ -112,6 +112,7 @@ class GeneticAlgorithmRunner:
         return pop
 
     def update_turn(self, pop):
+        global TURN
         fitness_list = sorted(list(map(lambda x: x.fitness, pop)))
         if fitness_list[int(POPULATION_SIZE * 0.5)] >= (TURN * 0.4) - NEGLECTABLE_ERROR:
             print("-- More than half of the population are well performing --")
