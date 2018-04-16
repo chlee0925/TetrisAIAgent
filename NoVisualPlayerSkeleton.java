@@ -14,7 +14,7 @@ public class NoVisualPlayerSkeleton {
     }
 
     public static void main(String[] args) throws Exception {
-        if (args.length > 0) {
+        if (args.length > 1) {
             try {
                 int threading_option = Integer.parseInt(args[0]);
                 if (threading_option == 0) {
