@@ -159,7 +159,7 @@ class GeneticAlgorithmRunner:
         dump(pop, open(dir + self._timestamp + "/" + str(i+1) + ".pickle", "wb"))
 
     def thread_fitness_function(self, individual, results, i):
-        results[i] = int(subprocess.check_output(['java', '-classpath', "out/", "NoVisualPlayerSkeleton", str(TURN)] + [str(x) for x in individual]).strip())
+        results[i] = int(subprocess.check_output(['java', '-classpath', "out/", "NoVisualPlayerSkeleton", "1", str(TURN)] + [str(x) for x in individual]).strip())
     
     # Given an individual, calculate its fitness value
     def fitness_function(self, individual):
