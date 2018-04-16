@@ -60,13 +60,13 @@ class GeneticAlgorithmRunner:
 
     def selection(self, pop, tournsize=10):
         top_size = int(POPULATION_SIZE * 0.7)
-        pop = sorted(pop, key=lambda x: x.fitness, reverse=True)
+        pop = sorted(pop, key=lambda x: (x.fitness, -x.std_dev), reverse=True)
         new_size = POPULATION_SIZE - top_size
         del pop[-new_size:]
         offspring_pop = []
         for i in xrange(new_size):
             aspirants = random.sample(pop, tournsize)
-            top_k = sorted(aspirants, key=lambda x: x.fitness, reverse=True)[:2]
+            top_k = sorted(aspirants, key=lambda x: (x.fitness, -x.std_dev), reverse=True)[:2]
             offspring = self.weighted_average_crossover(top_k[0], top_k[1])
             offspring_pop.append(offspring)
         return (pop, offspring_pop)
@@ -142,7 +142,7 @@ class GeneticAlgorithmRunner:
         mean = sum(fits) / length
         # sum2 = sum(x*x for x in fits)
         # std = abs(sum2 / length - mean**2)**0.5
-        reporting_pop = sorted(pop, key=lambda x: x.fitness, reverse=True)
+        reporting_pop = sorted(pop, key=lambda x: (x.fitness, -x.std_dev), reverse=True)
         print("  Population Min %s" % reporting_pop[len(reporting_pop)-1].fitness)
         best_ind = reporting_pop[0]
         print("  Max %s" % best_ind.fitness)
