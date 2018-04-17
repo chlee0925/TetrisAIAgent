@@ -19,7 +19,9 @@ public class PlayerSkeleton {
                                                 1.0, // 8 - Height Weighted Cells
                                                 1.0, // 9 - Num Of Full Cells
                                                 1.0, // 10 - Row Breaks
-                                                1.0  // 11 - Col Breaks
+                                                1.0, // 11 - Col Breaks
+                                                1.0, // 12 - Depth Of Wide Wells
+                                                1.0  // 13 - Depth Of Wells
                                             };
 
 	public PlayerSkeleton() {
@@ -192,7 +194,13 @@ public class PlayerSkeleton {
             - (weightVectors[10]) * featureRowBreaks(field, top)
 
             // FEATURE 11 - Col Breaks
-            - (weightVectors[11]) * featureColumnBreaks(field, top);
+            - (weightVectors[11]) * featureColumnBreaks(field, top)
+
+            // FEATURE 12 - Depth Of Wide Wells
+            - (weightVectors[12]) * featureDepthOfWideWells(field, top)
+
+            // FEATURE 13 - Holes Depth
+            - (weightVectors[13]) * featureHolesDepth(field, top);
 
     }
 
@@ -297,26 +305,27 @@ public class PlayerSkeleton {
     
     /**
      * FEATURE 7 - Depth Of Wells
-     * Number of blocks in wells: min depth 1, max width 1)
+     * Number of blocks in wells: min depth 2, width 1)
      */
-	public int featureDepthOfWells(int[] top) {
-		int wells = 0;
-		int depth = 0;
-		for (int i=0; i<top.length; i++) {
-			if (i==0) {
-				depth = top[i+1] - top[i];
-			} else if (i == top.length-1) {
-				depth = top[i-1] - top[i];
-			} else {
-				depth = Math.min(top[i+1], top[i-1]) - top[i];
-			}
-			if(depth > 0){
-				wells += depth;
-			}
-		}
-		return wells;
+    public int featureDepthOfWells(int[] top) {
+        int wells = 0;
+        int depth = 0;
+        // wells with width 1
+        for (int i=0; i<top.length; i++) {
+            if (i==0) {
+                depth = top[i+1] - top[i];
+            } else if (i == top.length-1) {
+                depth = top[i-1] - top[i];
+            } else {
+                depth = Math.min(top[i+1], top[i-1]) - top[i];
+            }
+            if(depth > 1){
+                wells += depth;
+            }
+        }
+        return wells;
 	}
-    
+
     /**
      * FEATURE 8 - Height Weighted Cells
      * Sum of full cells weighted by their row number
@@ -382,6 +391,64 @@ public class PlayerSkeleton {
             }
         }
         return colTransition;
+    }
+
+    /**
+     * FEATURE 12 - Depth Of Wide Wells
+     * Number of blocks in wells: min depth 2, width 2)
+     */
+    public int featureDepthOfWideWells(int[] top) {
+        int wells = 0;
+        int depth = 0;
+        int diff = 0;
+        // wells with width 2
+        for (int i=0; i<top.length-1; i++) {
+            diff = Math.abs(top[i+1] - top[i]);
+            if ( diff < 2 ) {// check for height neighbor
+            }
+            if (i==0) {
+                depth = top[i+2] - Math.min(top[i], top[i+1]);
+                if ( depth > 1 ) {
+                    wells += top[i+2] - top[i];
+                    wells += top[i+2] - top[i+1];
+                }
+            } else if (i == top.length-2) {
+                depth = top[i-1] - Math.min(top[i], top[i+1]);
+                if ( depth > 1 ) {
+                    wells += top[i-1] - top[i];
+                    wells += top[i-1] - top[i+1];
+                }
+            } else {
+                depth = Math.min(top[i+2], top[i-1]) - Math.min(top[i], top[i+1]);
+                if ( depth > 1 ) {
+                    wells += Math.min(top[i+2], top[i-1]) - top[i];
+                    wells += Math.min(top[i+2], top[i-1]) - top[i+1];
+                }
+            }
+        }
+
+        return wells;
+    }
+
+    /**
+     * FEATURE 13 - Holes Depth
+     * How far the hole is from the surface
+     */
+    public int featureHolesDepth(int[][] field, int[] top) {
+        int holesDepth = 0;
+        int depth = 0;
+        for (int i=0; i<top.length; i++) {
+            depth = 0;
+            for (int j=0; j<top[i]; j++) {
+                if (field[j][i] != 0) {
+                    depth++;
+                } else {
+                    if (depth > 1)
+                        holesDepth += depth;
+                }
+            }
+        }
+        return holesDepth;
     }
 
     ///////////////////////////////////////////////
