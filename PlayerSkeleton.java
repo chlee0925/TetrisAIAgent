@@ -197,7 +197,7 @@ public class PlayerSkeleton {
             - (weightVectors[11]) * featureColumnBreaks(field, top)
 
             // FEATURE 12 - Depth Of Wide Wells
-            - (weightVectors[12]) * featureDepthOfWideWells(field, top)
+            - (weightVectors[12]) * featureDepthOfWideWells(top)
 
             // FEATURE 13 - Holes Depth
             - (weightVectors[13]) * featureHolesDepth(field, top);
