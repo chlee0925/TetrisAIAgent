@@ -152,7 +152,10 @@ public class NoVisualState {
 	
 	//random integer, returns 0-6
 	private int randomPiece() {
-		return (int)(Math.random()*N_PIECES);
+        int rand = (int)(Math.random()*(N_PIECES + 4)); // 0 ~ 10
+        if (rand <= 4) return rand; // 0 ~ 4
+        else if (rand <= 7) return 5; // 5 ~ 7 
+        else return 6; // 8 ~ 10
 	}
 	
 
