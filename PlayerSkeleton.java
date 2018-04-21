@@ -7,23 +7,24 @@ public class PlayerSkeleton {
 	public static final int N_PIECES = 7;
     public double[] weightVectors = new double[]{ 
                                                 // Reward
-                                                20.0,
+                                                0.040320133782152184,
                                                 // Features
-                                                1.0, // 1 - Max Height
-                                                1.0, // 2 - Num Of Holes
-                                                1.0, // 3 - Landing Height
-                                                1.0, // 4 - Cell Transition
-                                                1.0, // 5 - Height Diff Sum
-                                                1.0, // 6 - Mean Column Height
-                                                1.0, // 7 - Depth Of Wells
-                                                1.0, // 8 - Height Weighted Cells
-                                                1.0, // 9 - Num Of Full Cells
-                                                1.0, // 10 - Row Breaks
-                                                1.0, // 11 - Col Breaks
-                                                1.0, // 12 - Depth Of Wide Wells
-                                                1.0  // 13 - Depth Of Wells
+                                                0.07431852364950772, // 1 - Max Height
+                                                0.8094550422975373, // 2 - Num Of Holes
+                                                0.21304859233816892, // 3 - Landing Height
+                                                0.5096070220446934, // 7 - Depth Of Wells
+                                                0.22105346488603894 , // 10 - Row Breaks
+                                                0.7603331943238718 // 11 - Col Breaks
                                             };
-
+/*
+                                                0, // 4 - Cell Transition
+                                                0, // 5 - Height Diff Sum
+                                                0, // 6 - Mean Column Height
+                                                0, // 8 - Height Weighted Cells
+                                                0, // 9 - Num Of Full Cells
+                                                0, // 12 - Depth Of Wide Wells
+                                                0  // 13 - Holes Depth
+*/
 	public PlayerSkeleton() {
 	}
 
@@ -155,8 +156,8 @@ public class PlayerSkeleton {
 	}
 
 	public double evaluationFunction(int[][] field, int[] top, int landingHeight, int rowsCleared) {
-		final int featureColumnHeightIndex = 1;
-		final int featureAbsoluteAdjColumnHeightDiffIndex = 11;
+		// final int featureColumnHeightIndex = 1;
+		// final int featureAbsoluteAdjColumnHeightDiffIndex = 11;
 
 		return
 
@@ -171,7 +172,7 @@ public class PlayerSkeleton {
 
             // FEATURE 3 - Landing Height
             - (weightVectors[3]) * landingHeight
-
+/*
             // FEATURE 4 - Cell Transition
             - (weightVectors[4]) * featureCellTransitions(field, top)
 
@@ -180,28 +181,28 @@ public class PlayerSkeleton {
 
             // FEATURE 6 - Mean Column Height
             - (weightVectors[6]) * featureMeanColumnHeight(top)
-
+*/
             // FEATURE 7 - Depth Of Wells
-            - (weightVectors[7]) * featureDepthOfWells(top)
-
+            - (weightVectors[4]) * featureDepthOfWells(top)
+/*
             // FEATURE 8 - Height Weighted Cells
             - (weightVectors[8]) * featureHeightWeightedCells(field, top)
 
             // FEATURE 9 - Num Of Full Cells
             - (weightVectors[9]) * featureNumOfFullCells(field, top)
-
+*/
             // FEATURE 10 - Row Breaks
-            - (weightVectors[10]) * featureRowBreaks(field, top)
+            - (weightVectors[5]) * featureRowBreaks(field, top)
 
             // FEATURE 11 - Col Breaks
-            - (weightVectors[11]) * featureColumnBreaks(field, top)
-
+            - (weightVectors[6]) * featureColumnBreaks(field, top);
+/*
             // FEATURE 12 - Depth Of Wide Wells
             - (weightVectors[12]) * featureDepthOfWideWells(top)
 
             // FEATURE 13 - Holes Depth
             - (weightVectors[13]) * featureHolesDepth(field, top);
-
+*/
     }
 
 	///////////////////////////////////////
