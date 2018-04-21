@@ -1,18 +1,36 @@
 import java.util.*;
+import java.util.stream.*;
 
 public class PlayerSkeleton {
-
-	List<Integer> cols = Arrays.asList(new Integer[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 });
 	public static final int COLS = 10;
 	public static final int ROWS = 21;
 	public static final int N_PIECES = 7;
+    public double[] weightVectors = new double[]{ 
+                                                // Reward
+                                                0.040320133782152184,
+                                                // Features
+                                                0.07431852364950772, // 1 - Max Height
+                                                0.8094550422975373, // 2 - Num Of Holes
+                                                0.21304859233816892, // 3 - Landing Height
+                                                0.5096070220446934, // 7 - Depth Of Wells
+                                                0.22105346488603894 , // 10 - Row Breaks
+                                                0.7603331943238718 // 11 - Col Breaks
+                                            };
+/*
+                                                0, // 4 - Cell Transition
+                                                0, // 5 - Height Diff Sum
+                                                0, // 6 - Mean Column Height
+                                                0, // 8 - Height Weighted Cells
+                                                0, // 9 - Num Of Full Cells
+                                                0, // 12 - Depth Of Wide Wells
+                                                0  // 13 - Holes Depth
+*/
+	public PlayerSkeleton() {
+	}
 
-	public double[] weightVectors = {20.0 // Reward
-									, -1.0, -1.0, -1.0, -1.0, -1.0 // Features
-									, -1.0, -1.0, -1.0, -1.0, -1.0
-									, -1.0, -1.0, -1.0, -1.0, -1.0
-									, -1.0, -1.0, -1.0, -1.0, -1.0
-									, -2.0};
+	public PlayerSkeleton(ArrayList<Double> weightOverride) {
+        for(int i = 0; i < weightOverride.size(); i++) if (i < this.weightVectors.length) this.weightVectors[i]=weightOverride.get(i);
+	}
 
 	public int pickMove(State s, int[][] legalMoves) {
 		return pickMoveImpl(s.getField(), legalMoves, s.getTop(), s.getpOrients(), s.getpWidth(), s.getpHeight(), s.getpBottom(), s.getpTop(), s.getNextPiece());
@@ -20,8 +38,17 @@ public class PlayerSkeleton {
 
 	public static void main(String[] args) {
 		State s = new State();
-		new TFrame(s);
-		PlayerSkeleton p = new PlayerSkeleton();
+        new TFrame(s);
+
+        // Override weight vectors if provided
+        PlayerSkeleton p = new PlayerSkeleton(Arrays.asList(args).stream().mapToDouble(weightStr -> Double.parseDouble(weightStr)).boxed().collect(Collectors.toCollection(ArrayList::new)));
+
+        // Print out the weight vectors used
+		for(int wIndex = 0; wIndex < p.weightVectors.length; wIndex++) {
+			System.out.print(p.weightVectors[wIndex]+",");
+        }
+        System.out.println();
+        
 		while (!s.hasLost()) {
 			s.makeMove(p.pickMove(s, s.legalMoves()));
 			s.draw();
@@ -41,21 +68,30 @@ public class PlayerSkeleton {
 	 */
 	public int pickMoveImpl(int[][] field, int[][] legalMoves, int[] top, int[] pOrient, int[][] pWidth, int[][] pHeight, int[][][] pBottom, int[][][] pTop, int nextPiece) {
 		int moveDecision = 0;
-		double currentBest = Double.NEGATIVE_INFINITY;
+        double currentBest = Double.NEGATIVE_INFINITY;
+        
 		for (int moveIndex = 0; moveIndex < legalMoves.length; moveIndex++) {
 			int[] move = legalMoves[moveIndex];
 			int orient = move[0];
-			int slot = move[1];
+            int slot = move[1];
+            
+            // Create temporary field to simulate a move
+            int[][] tempField = new int[field.length][];
+            for(int i = 0; i < tempField.length; i++) {
+                tempField[i] = Arrays.copyOf(field[i], field[i].length);
+            }
+            // Create temporary top to simulate a move
+			int[] tempTop = Arrays.copyOf(top, top.length);
 
 			///////////////
 			///Make Move///
 			///////////////
 
 			// Find height where the piece is placed at
-			int height = top[slot] - pBottom[nextPiece][orient][0];
-			//for each column beyond the first in the piece
+			int height = tempTop[slot] - pBottom[nextPiece][orient][0];
+			// For each column beyond the first in the piece
 			for (int c = 1; c < pWidth[nextPiece][orient]; c++) {
-				height = Math.max(height, top[slot + c] - pBottom[nextPiece][orient][c]);
+				height = Math.max(height, tempTop[slot + c] - pBottom[nextPiece][orient][c]);
 			}
 
 			// If the game is going to end, try the next move
@@ -67,99 +103,139 @@ public class PlayerSkeleton {
 			for (int i = 0; i < pWidth[nextPiece][orient]; i++) {
 				//from bottom to top of brick
 				for (int h = height + pBottom[nextPiece][orient][i]; h < height + pTop[nextPiece][orient][i]; h++) {
-					field[h][i + slot] = Integer.MAX_VALUE;
+					tempField[h][i + slot] = Integer.MAX_VALUE;
 				}
 			}
-			// Create temporary top
-			int[] tempTop = Arrays.copyOf(top, top.length);
+			
 			//adjust tempoaray top
 			for(int c = 0; c < pWidth[nextPiece][orient]; c++) {
 				tempTop[slot+c]=height+pTop[nextPiece][orient][c];
-			}
+            }
+
+            int rowsCleared = 0;
+            
+            //check for full rows - starting at the top
+            for(int r = height+pHeight[nextPiece][orient]-1; r >= height; r--) {
+                //check all columns in the row
+                boolean full = true;
+                for(int c = 0; c < COLS; c++) {
+                    if(tempField[r][c] == 0) {
+                        full = false;
+                        break;
+                    }
+                }
+                //if the row was full - remove it and slide above stuff down
+                if(full) {
+                    rowsCleared++;
+                    //for each column
+                    for(int c = 0; c < COLS; c++) {
+                        //slide down all bricks
+                        for(int i = r; i < tempTop[c]; i++) {
+                            tempField[i][c] = tempField[i+1][c];
+                        }
+                        //lower the top
+                        tempTop[c]--;
+                        while(tempTop[c]>=1 && tempField[tempTop[c]-1][c]==0) tempTop[c]--;
+                    }
+                }
+            }
 
 			/////////////////////////////////
 			///Run the evaluation function///
 			/////////////////////////////////
 
 			// Calculate the evaluation value
-			double evaluationValue = evaluationFunction(field, tempTop);
+			double evaluationValue = evaluationFunction(tempField, tempTop, height, rowsCleared);
 			if (evaluationValue > currentBest) {
 				currentBest = evaluationValue;
 				moveDecision = moveIndex;
-			}
-
-			////////////////////////////////
-			///Restore the original state///
-			////////////////////////////////
-
-			// Restore the original field
-			for (int i = 0; i < pWidth[nextPiece][orient]; i++) {
-				//from bottom to top of brick
-				for (int h = height + pBottom[nextPiece][orient][i]; h < height + pTop[nextPiece][orient][i]; h++) {
-					field[h][i + slot] = 0; // Undo
-				}
 			}
 		}
 
 		return moveDecision;
 	}
 
-	public double evaluationFunction(int[][] field, int[] top) {
-		final int featureColumnHeightIndex = 1;
-		final int featureAbsoluteAdjColumnHeightDiffIndex = 11;
+	public double evaluationFunction(int[][] field, int[] top, int landingHeight, int rowsCleared) {
+		// final int featureColumnHeightIndex = 1;
+		// final int featureAbsoluteAdjColumnHeightDiffIndex = 11;
 
 		return
 
-			// INDEX 0 - REWARD
-			(weightVectors[0]) * rewardRowsToBeCleared(field, top)
+            // INDEX 0 - REWARD
+            (weightVectors[0]) * rowsCleared
 
-			// FEATURE 1~10 - COLUMN HEIGHT
-			+ (cols.stream().mapToDouble(col -> (weightVectors[featureColumnHeightIndex+col]) * featureColumnHeight(top, col)).sum())
+            // FEATURE 1 - Max Height
+            - (weightVectors[1]) * featureMaxColumnHeight(top)
 
-			// FEATURE 11~19 - ABSOLUTE HEIGHT DIFF
-			+ (cols.stream().filter(col -> { return col <= 8; })
-				.mapToDouble(col -> (weightVectors[featureAbsoluteAdjColumnHeightDiffIndex+col]) * featureAbsoluteAdjColumnHeightDiff(top, col)).sum())
+            // FEATURE 2 - Num Of Holes
+            - (weightVectors[2]) * featureNumOfHoles(field, top)
 
-			// FEATURE 20 - MAX HEIGHT
-			+ (weightVectors[20]) * featureMaxColumnHeight(top)
+            // FEATURE 3 - Landing Height
+            - (weightVectors[3]) * landingHeight
+/*
+            // FEATURE 4 - Cell Transition
+            - (weightVectors[4]) * featureCellTransitions(field, top)
 
-			// FEATURE 21 - NUM OF HOLES
-			+ (weightVectors[21]) * featureNumOfHoles(field, top);
-	}
+            // FEATURE 5 - Height Diff Sum
+            - (weightVectors[5]) * featureHeightDiffSum(top)
+
+            // FEATURE 6 - Mean Column Height
+            - (weightVectors[6]) * featureMeanColumnHeight(top)
+*/
+            // FEATURE 7 - Depth Of Wells
+            - (weightVectors[4]) * featureDepthOfWells(top)
+/*
+            // FEATURE 8 - Height Weighted Cells
+            - (weightVectors[8]) * featureHeightWeightedCells(field, top)
+
+            // FEATURE 9 - Num Of Full Cells
+            - (weightVectors[9]) * featureNumOfFullCells(field, top)
+*/
+            // FEATURE 10 - Row Breaks
+            - (weightVectors[5]) * featureRowBreaks(field, top)
+
+            // FEATURE 11 - Col Breaks
+            - (weightVectors[6]) * featureColumnBreaks(field, top);
+/*
+            // FEATURE 12 - Depth Of Wide Wells
+            - (weightVectors[12]) * featureDepthOfWideWells(top)
+
+            // FEATURE 13 - Holes Depth
+            - (weightVectors[13]) * featureHolesDepth(field, top);
+*/
+    }
 
 	///////////////////////////////////////
 	///////////		FEATURES	///////////
 	///////////////////////////////////////
 
 	/**
-	 * FEATURE 1~10 - Column Height
+	 * feature removed
+	 * Column Height
 	 */
 	public int featureColumnHeight(int[] top, int col) {
 		return top[col];
 	}
 
 	/**
-	 * FEATURE 11~19 - Absolute height difference between (col) and (col+1) columns.
+	 * feature removed
+	 * Absolute height difference between (col) and (col+1) columns.
 	 */
 	public int featureAbsoluteAdjColumnHeightDiff(int[] top, int col) {
 		return Math.abs(top[col] - top[col+1]);
 	}
 
 	/**
-	 * FEATURE 20 - Maximum height across all columns
+	 * FEATURE 1 - Max Height
+	 * Maximum height across all columns
 	 */
 	public int featureMaxColumnHeight(int[] top) {
-		int maxHeight = 0;
-		for (int height : top) {
-			if (maxHeight < height) {
-				maxHeight = height;
-			}
-		}
-		return maxHeight;
+		return getMaxColHeight(top);
 	}
 
 	/**
-	 * FEATURE 21 - the number of holes in the wall, that is, the number of empty positions of
+	 * FEATURE 2 - Num Of Holes
+	 * The number of holes in the wall: the number of empty positions of
 	 * the wall that have at least one full position above them.
 	 */
 	public int featureNumOfHoles(int[][] field, int[] top) {
@@ -172,28 +248,213 @@ public class PlayerSkeleton {
 			}
 		}
 		return holes;
+    }
+
+    /**
+     * FEATURE 4 - Cell Transition
+     * The number of empty cells/borders touching the edges of full cells.
+     */
+    public int featureCellTransitions(int[][] field, int[] top) {
+        int numOfCellTrns = 0;
+
+        int[] rowTrans = {1, -1, 0, 0};
+        int[] colTrans = {0, 0, 1, -1};
+
+        int maxHeight = getMaxColHeight(top);
+        for (int col = 0; col < top.length; col++) {
+            for (int row = 0; row <= maxHeight; row++) {
+                if (!isPositionValid(row, col)) continue;
+                if (field[row][col] != 0) continue; // only interested in empty cell
+                
+                boolean isCellTransition = false;
+                for (int i = 0; i < 4; i++) { // four neighbours
+                    int neighRow = row + rowTrans[i];
+                    int neighCol = col + colTrans[i];
+
+                    if (isPositionValid(neighRow, neighCol) && field[neighRow][neighCol] != 0) {
+                       isCellTransition = true;
+                       break;
+                    }
+                }
+
+                if (isCellTransition) numOfCellTrns++;
+            }
+        }
+
+        return numOfCellTrns;
+    }
+
+    /**
+     * FEATURE 5 - Height Diff Sum
+     * Sum of the height differences between adjacent columns.
+     */
+    public int featureHeightDiffSum(int[] top) {
+        int heightDiffSum = 0;
+        for (int col = 0; col < top.length - 1; col++) {
+            heightDiffSum += Math.abs(top[col] - top[col + 1]);
+        }
+        return heightDiffSum;
+    }
+
+    /**
+     * FEATURE 6 - Mean Column Height
+     * Average column heights.
+     */
+    public double featureMeanColumnHeight(int[] top) {
+        return Arrays.stream(top).mapToDouble(height -> (double) height).average().getAsDouble();
+    }
+    
+    /**
+     * FEATURE 7 - Depth Of Wells
+     * Number of blocks in wells: min depth 2, width 1)
+     */
+    public int featureDepthOfWells(int[] top) {
+        int wells = 0;
+        int depth = 0;
+        // wells with width 1
+        for (int i=0; i<top.length; i++) {
+            if (i==0) {
+                depth = top[i+1] - top[i];
+            } else if (i == top.length-1) {
+                depth = top[i-1] - top[i];
+            } else {
+                depth = Math.min(top[i+1], top[i-1]) - top[i];
+            }
+            if(depth > 1){
+                wells += depth;
+            }
+        }
+        return wells;
 	}
 
-	//////////////////////////////////
-	///////////  REWARD  /////////////
-	//////////////////////////////////
+    /**
+     * FEATURE 8 - Height Weighted Cells
+     * Sum of full cells weighted by their row number
+     */
+    public int featureHeightWeightedCells(int[][] field, int[] top) {
+        int sum = 0;
+        for (int i=0; i<top.length; i++) {
+            for (int j=0; j<top[i]; j++) {
+                if (field[j][i] != 0) sum += j + 1; // weight of row 0 = 1
+            }
+        }
+        return sum;
+    }
 
-	public int rewardRowsToBeCleared(int[][] field, int[] top) {
-		int rowsCleared = 0;
-		for (int i=0; i<getMinColHeight(top); i++) {
-			boolean isFullRow = true;
-			for (int j=0; j<field[i].length; j++) {
-				if (field[i][j] == 0) {
-					isFullRow = false;
-					break;
-				}
-			}
-			if (isFullRow) {
-				rowsCleared++;
-			}
-		}
-		return rowsCleared;
-	}
+    /**
+     * FEATURE 9 - Num Of Full Cells
+     * Number of occupied cells on the board
+     */
+    public int featureNumOfFullCells(int[][] field, int[] top) {
+        int fullCells = 0;
+        for (int i=0; i<top.length; i++) {
+            for (int j=0; j<top[i]; j++) {
+               if (field[j][i] != 0) {
+                   fullCells++;
+               }
+            }
+        }
+        return fullCells;
+    }
+
+    /**
+     * FEATURE 10 - Row BreaksRow Breaks
+     * Number of transitions between a filled and empty cell in each row
+     */
+    public int featureRowBreaks(int[][] field, int[] top) {
+        int rowTransition = 0;
+        int maxHeight = getMaxColHeight(top);
+        for (int row = 0; row < maxHeight; row++) {
+            int previousState = field[row][0];
+            for (int col = 1; col < COLS; col++) {
+                if ((field[row][col] != 0) != (previousState != 0)) {
+                    rowTransition++;
+                }
+                previousState = field[row][col];
+            }
+        }
+        return rowTransition;
+    }
+
+    /**
+     * FEATURE 11 - Col Breaks
+     * Number of transitions between a filled and empty cell in each column
+     */
+    public int featureColumnBreaks(int[][] field, int[] top) {
+        int colTransition = 0;
+        for (int col = 0; col < COLS; col++) {
+            int previousState = field[0][col];
+            for (int row = 1; row < top[col]; row++) {
+                if ((field[row][col] != 0) != (previousState != 0)) {
+                    colTransition++;
+                }
+                previousState = field[row][col];
+            }
+        }
+        return colTransition;
+    }
+
+    /**
+     * FEATURE 12 - Depth Of Wide Wells
+     * Number of blocks in wells: min depth 2, width 2)
+     */
+    public int featureDepthOfWideWells(int[] top) {
+        int wells = 0;
+        int depth = 0;
+        int diff = 0;
+        // wells with width 2
+        for (int i=0; i<top.length-1; i++) {
+            diff = Math.abs(top[i+1] - top[i]);
+            if ( diff < 2 ) {// check for height neighbor
+            }
+            if (i==0) {
+                depth = top[i+2] - Math.min(top[i], top[i+1]);
+                if ( depth > 1 ) {
+                    wells += top[i+2] - top[i];
+                    wells += top[i+2] - top[i+1];
+                }
+            } else if (i == top.length-2) {
+                depth = top[i-1] - Math.min(top[i], top[i+1]);
+                if ( depth > 1 ) {
+                    wells += top[i-1] - top[i];
+                    wells += top[i-1] - top[i+1];
+                }
+            } else {
+                depth = Math.min(top[i+2], top[i-1]) - Math.min(top[i], top[i+1]);
+                if ( depth > 1 ) {
+                    wells += Math.min(top[i+2], top[i-1]) - top[i];
+                    wells += Math.min(top[i+2], top[i-1]) - top[i+1];
+                }
+            }
+        }
+
+        return wells;
+    }
+
+    /**
+     * FEATURE 13 - Holes Depth
+     * How far the hole is from the surface
+     */
+    public int featureHolesDepth(int[][] field, int[] top) {
+        int holesDepth = 0;
+        int depth = 0;
+        for (int i=0; i<top.length; i++) {
+            depth = 0;
+            for (int j=0; j<top[i]; j++) {
+                if (field[j][i] != 0) {
+                    depth++;
+                } else {
+                    if (depth > 1)
+                        holesDepth += depth;
+                }
+            }
+        }
+        return holesDepth;
+    }
+
+    ///////////////////////////////////////////////
+    ///////////  AUXILIARY FUNCTIONS  /////////////
+    ///////////////////////////////////////////////
 
 	public int getMinColHeight(int[] top) {
 		int minHeight = Integer.MAX_VALUE;
@@ -203,6 +464,24 @@ public class PlayerSkeleton {
 			}
 		}
 		return minHeight;
-	}
+    }
+
+    public int getMaxColHeight(int[] top) {
+        int maxHeight = 0;
+        for (int height : top) {
+            if (maxHeight < height) {
+                maxHeight = height;
+            }
+        }
+        return maxHeight;
+    }
+    
+    /**
+     * @param row row index
+     * @param col col index
+     */
+    public boolean isPositionValid(int row, int col) {
+        return (row >= 0) && (row < ROWS - 1) && (col >= 0) && (col < COLS);
+    }
 
 }
